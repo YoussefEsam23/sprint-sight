@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import './HomePage.css';
+import { useParams } from 'react-router-dom';
+import '../styling/HomePage.css';
 
 // --- HELPER COMPONENTS ---
 const StatusTag = ({ status }) => {
@@ -31,6 +32,7 @@ const TypeTag = ({ type }) => {
 
 // --- MAIN COMPONENT ---
 const HomePage = () => {
+  const { projectId } = useParams();
   // UI States
   const [isDropdownOpen, setIsDropdownOpen] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -55,7 +57,7 @@ const HomePage = () => {
         const token = localStorage.getItem('sprintSightToken');
         
         // Replace with your actual GET endpoint
-        const response = await fetch('http://localhost:5000/api/tasks', {
+        const response = await fetch('http://localhost:5000/api/projects/${projectId}/tasks', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -75,7 +77,7 @@ const HomePage = () => {
     };
 
     fetchTasks();
-  }, []);
+  }, [projectId]);
 
   // --- MODAL CONTROLS ---
   const openModal = (task = null) => {
@@ -132,7 +134,7 @@ const HomePage = () => {
         }
       } else {
         // CREATE New Task (POST Request)
-        const response = await fetch('http://localhost:5000/api/tasks', {
+        const response = await fetch('http://localhost:5000/api/projects/${projectId}/tasks', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

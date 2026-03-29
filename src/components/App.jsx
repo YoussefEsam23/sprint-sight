@@ -1,8 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './Login';
-import HomePage from './HomePage';
-import ProtectedRoute from './ProtectedRoute'; // Import our new component
+import HomePage from './HomePageMock';
+import ProjectDashboard from './ProjectDashboardMock';
+import ProtectedRoute from './ProtectedRoute';
 
 function App() {
   return (
@@ -10,9 +11,19 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         
-        {/* We wrap HomePage inside the ProtectedRoute */}
+        {/* The New Dashboard Route */}
         <Route 
-          path="/home" 
+          path="/dashboard" 
+          element={
+            <ProtectedRoute>
+              <ProjectDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* The Existing Home (Backlog) Route */}
+        <Route 
+          path="/project/:projectId" 
           element={
             <ProtectedRoute>
               <HomePage />
