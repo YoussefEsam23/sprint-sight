@@ -5,6 +5,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import '../styling/ProjectDashboard.css';
 
+// --- NEW: IMPORT LOGOS ---
+import logoLight from '/sprint-sight-logo.png';
+import logoDark from '/sprint-sight-logo-dark.png';
+
 const projectSchema = z.object({
   name: z.string().min(3, "Project name must be at least 3 characters"),
   description: z.string().min(10, "Please provide a short description (min 10 characters)"),
@@ -17,7 +21,14 @@ const initialProjects = [
   { id: 3, name: 'Digital Transformation', description: 'Migrating legacy internal tools to the new unified Atelier cloud infrastructure.', status: 'ACTIVE', deadline: 'Dec 01', isPrivate: false }
 ];
 
-const ProjectDashboardMock = () => {
+const getCookie = (name) => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+};
+
+const ProjectDashboard = () => {
   const [projects, setProjects] = useState(() => {
     const savedProjects = localStorage.getItem('sprintSightMockProjects');
     return savedProjects ? JSON.parse(savedProjects) : initialProjects;
@@ -35,7 +46,31 @@ const ProjectDashboardMock = () => {
   // --- THEME ENGINE STATE ---
   const [theme, setTheme] = useState(localStorage.getItem('sprintSightTheme') || 'system');
   
+  // --- PROFILE & SETTINGS STATES ---
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [profileMessage, setProfileMessage] = useState('');
+
+  // Get current user info from local storage (or fallback to placeholders)
+  const storedUser = JSON.parse(localStorage.getItem('sprintSightUser')) || {};
+  const [currentUser, setCurrentUser] = useState({
+    username: storedUser.username || 'User',
+    fullName: storedUser.fullName || 'My Account',
+    email: storedUser.email || 'user@sprintsight.com'
+  });
+
+  const [profileFormData, setProfileFormData] = useState({ 
+    fullName: currentUser.fullName, 
+    username: currentUser.username, 
+    email: currentUser.email, 
+    password: '' 
+  });
+
   const navigate = useNavigate();
+
+  // --- NEW: LOGO SELECTION LOGIC ---
+  const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const logoSrc = isDark ? logoDark : logoLight;
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: zodResolver(projectSchema),
@@ -43,7 +78,10 @@ const ProjectDashboardMock = () => {
   });
 
   useEffect(() => {
-    const handleClickOutside = () => setOpenMenuId(null);
+    const handleClickOutside = () => {
+      setOpenMenuId(null);
+      setIsProfileDropdownOpen(false); // Close dropdown when clicking outside
+    };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
@@ -76,7 +114,6 @@ const ProjectDashboardMock = () => {
     else setTheme('light');
   };
 
-  // Restored: Using standard text emojis!
   const getThemeIcon = () => {
     if (theme === 'light') return '☀️';
     if (theme === 'dark') return '🌙';
@@ -110,9 +147,124 @@ const ProjectDashboardMock = () => {
 
   const closeModal = () => { setIsModalOpen(false); reset(); };
 
-  const handleLogout = () => {
-    localStorage.removeItem('sprintSightToken');
-    navigate('/');
+  // --- ACCOUNT & PROFILE HANDLERS ---
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem('sprintSightToken');
+      // Replace this URL with your real backend logout endpoint if needed
+      
+        // refresh jwt token
+        const refresh = await fetch(`api/auth/refresh` , {
+          method : 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
+          }
+        });
+
+      await fetch('api/auth/logout', {
+        method: 'POST',
+        credentials: 'include', 
+        headers: { 'Authorization': `Bearer ${token}`,
+        'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
+       }
+      });
+    } catch (err) {
+      console.error("Logout API failed, forcing local logout.");
+    } finally {
+      localStorage.removeItem('sprintSightToken');
+      localStorage.removeItem('sprintSightUser');
+      navigate('/');
+    }
+  };
+
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setProfileMessage('');
+    
+    try {
+      const token = localStorage.getItem('sprintSightToken');
+      const rawUserData = JSON.parse(localStorage.getItem('sprintSightUser')) || {};
+      const userId = rawUserData.id || rawUserData._id;
+
+      // refresh jwt token
+        const refresh = await fetch(`api/auth/refresh` , {
+          method : 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
+          }
+        });
+
+      const response = await fetch(`api/users/${userId}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'X-XSRF-TOKEN': getCookie('XSRF-TOKEN') 
+        },
+        body: JSON.stringify(profileFormData)
+      });
+
+      if (response.ok) {
+        setProfileMessage('Profile updated successfully!');
+        const updatedUser = { ...currentUser, ...profileFormData };
+        delete updatedUser.password; // Keep passwords out of local storage!
+        localStorage.setItem('sprintSightUser', JSON.stringify(updatedUser));
+        setCurrentUser(updatedUser);
+      } else {
+        setProfileMessage('Failed to update profile.');
+      }
+    } catch (error) {
+      setProfileMessage('Network error while updating.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm("WARNING: Are you absolutely sure you want to delete your account? This cannot be undone.")) return;
+    
+    try {
+      const token = localStorage.getItem('sprintSightToken');
+      const rawUserData = JSON.parse(localStorage.getItem('sprintSightUser')) || {};
+      const userId = rawUserData.id || rawUserData._id;
+
+      if (!userId) {
+        alert("Error: Could not find User ID. Please log out and log back in to refresh your data.");
+        return;
+      }
+
+      // refresh jwt token
+        const refresh = await fetch(`api/auth/refresh` , {
+          method : 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
+          }
+        });
+        
+      const response = await fetch(`api/users/${userId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}`,
+      credentials: 'include',
+      'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')}
+      });
+
+      if (response.ok) {
+        localStorage.removeItem('sprintSightToken');
+        localStorage.removeItem('sprintSightUser');
+        navigate('/');
+      } else {
+        alert("Failed to delete account.");
+      }
+    } catch (error) {
+      console.error("Network error deleting account:", error);
+    }
   };
 
   const onSubmit = async (data) => {
@@ -139,9 +291,11 @@ const ProjectDashboardMock = () => {
     <div className="dashboard-wrapper">
       <header className="header">
         <div className="header-left">
-          <div className="header-logo-container">
-            <span style={{color: 'var(--btn-text)', fontWeight: 'bold'}}>A</span>
-          </div>
+          <img 
+              src={logoSrc} 
+              alt="Sprint Sight Logo" 
+              style={{ height: '32px', width: 'auto', marginRight: '10px' }} 
+            />
           <h1 className="app-title" style={{color: 'var(--accent-color)'}}>Sprint Sight</h1>
         </div>
         <div className="header-center">
@@ -151,21 +305,52 @@ const ProjectDashboardMock = () => {
           </div>
         </div>
         
-        <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+        <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', position: 'relative' }}>
           
           {/* --- THEME TOGGLE BUTTON --- */}
           <button className="icon-btn" onClick={cycleTheme} title={`Theme: ${theme}`}>
             {getThemeIcon()}
           </button>
           
-          {/* Notification and Profile Emojis */}
+          {/* Notification Emoji */}
           <button className="icon-btn" title="Notifications">
             🔔
           </button>
-          <div className="user-profile-icon"><span className="user-initial">Y</span></div>
-          <button className="logout-btn" onClick={handleLogout}>Logout</button>
-        </div>
+          
+          {/* USER PROFILE ICON & DROPDOWN TRIGGER */}
+          <div 
+            className="user-profile-icon" 
+            onClick={(e) => { e.stopPropagation(); setIsProfileDropdownOpen(!isProfileDropdownOpen); }}
+            title="Account Menu"
+          >
+            <span className="user-initial">{currentUser.username.charAt(0).toUpperCase()}</span>
+          </div>
 
+          {/* THE PROFILE DROPDOWN MENU */}
+          {isProfileDropdownOpen && (
+            <div className="profile-dropdown" onClick={(e) => e.stopPropagation()}>
+              <div className="profile-dropdown-header">
+                <div className="profile-dropdown-avatar">
+                  {currentUser.username.charAt(0).toUpperCase()}
+                </div>
+                <div className="profile-dropdown-info">
+                  <h4>{currentUser.fullName}</h4>
+                  <p>{currentUser.email}</p>
+                </div>
+              </div>
+              
+              <div className="profile-dropdown-actions">
+                <button onClick={() => { setIsProfileDropdownOpen(false); setIsProfileModalOpen(true); }}>
+                  <span>⚙️</span> Account Settings
+                </button>
+                <button className="logout-item" onClick={handleLogout}>
+                  <span>🚪</span> Logout
+                </button>
+              </div>
+            </div>
+          )}
+
+        </div>
       </header>
 
       <main className="dashboard-main">
@@ -228,6 +413,7 @@ const ProjectDashboardMock = () => {
         </div>
       </main>
 
+      {/* --- CREATE / EDIT PROJECT MODAL --- */}
       {isModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -266,8 +452,82 @@ const ProjectDashboardMock = () => {
           </div>
         </div>
       )}
+
+      {/* --- ACCOUNT SETTINGS / UPDATE USER MODAL --- */}
+      {isProfileModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '450px' }}>
+            <h2 className="modal-title">Account Settings</h2>
+            
+            <form className="modal-form" onSubmit={handleUpdateProfile}>
+              
+              <div className="form-group">
+                <label>Full Name</label>
+                <input 
+                  type="text" 
+                  className="modal-input" 
+                  value={profileFormData.fullName}
+                  onChange={(e) => setProfileFormData({...profileFormData, fullName: e.target.value})}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Email Address</label>
+                <input 
+                  type="email" 
+                  className="modal-input" 
+                  value={profileFormData.email}
+                  onChange={(e) => setProfileFormData({...profileFormData, email: e.target.value})}
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Username</label>
+                  <input 
+                    type="text" 
+                    className="modal-input" 
+                    value={profileFormData.username}
+                    onChange={(e) => setProfileFormData({...profileFormData, username: e.target.value})}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>New Password</label>
+                  <input 
+                    type="password" 
+                    placeholder="Leave blank to keep" 
+                    className="modal-input" 
+                    value={profileFormData.password}
+                    onChange={(e) => setProfileFormData({...profileFormData, password: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              {profileMessage && (
+                <p style={{ color: 'var(--accent-color)', fontWeight: 'bold', fontSize: '0.85rem', textAlign: 'center' }}>
+                  {profileMessage}
+                </p>
+              )}
+
+              <div className="modal-actions" style={{ justifyContent: 'space-between', marginTop: '1.5rem' }}>
+                <button type="button" className="modal-btn cancel-btn" style={{ color: '#e74c3c', padding: '0' }} onClick={handleDeleteAccount}>
+                  Delete Account
+                </button>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button type="button" className="modal-btn cancel-btn" onClick={() => setIsProfileModalOpen(false)}>Cancel</button>
+                  <button type="submit" className="modal-btn save-btn" disabled={isLoading}>
+                    {isLoading ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
 
-export default ProjectDashboardMock;
+export default ProjectDashboard;

@@ -4,19 +4,26 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import '../styling/Login.css';
-import logoLight from '/sprint-sight-logo.png';
-import logoDark from '/sprint-sight-logo-dark.png';
-// --- SET YOUR REAL API URL HERE ---
-const API_BASE_URL = 'https://sprintsight-back.onrender.com/api/auth'; // Change this to your actual backend URL
 
+// --- 1. UPDATED VALIDATION SCHEMAS ---
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
 });
 
 const signUpSchema = z.object({
-  username: z.string().min(8, "Username must be at least 8 characters"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  fullName: z.string()
+    .min(1, "Full name is required")
+    .max(100, "Full name cannot exceed 100 characters"),
+  username: z.string()
+    .min(3, "Username must be at least 3 characters")
+    .max(50, "Username cannot exceed 50 characters"),
+  email: z.string()
+    .email("Invalid email address")
+    .max(255, "Email cannot exceed 255 characters"),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .max(255, "Password cannot exceed 255 characters"),
 });
 
 const getCookie = (name) => {
@@ -40,9 +47,6 @@ const Login = () => {
     resolver: zodResolver(isLoginView ? loginSchema : signUpSchema),
     mode: "onChange"
   });
-
-  const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  const logoSrc = isDark ? logoDark : logoLight;
 
   // Theme Logic
   useEffect(() => {
@@ -83,46 +87,69 @@ const Login = () => {
 
     try {
       if (isLoginView) {
-        // --- 1. REAL LOGIN API CALL ---
+        // refresh jwt token
+        const refresh = await fetch(`api/auth/refresh` , {
+          method : 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
+          }
+        });
+
+        // --- LOGIN API CALL ---
+
         const response = await fetch(`api/auth/login`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json',
-                    'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
-           },
+          credentials: 'include', // Fixed: This belongs outside the body
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
+          },
           body: JSON.stringify({
             username: data.username,
-            password: data.password,
-            Credentials: 'include' // Ensure cookies are included for CORS requests
+            password: data.password
           })
         });
 
         const result = await response.json();
 
         if (response.ok) {
-          // Success! Save the real JWT token securely
           localStorage.setItem('sprintSightToken', result.token);
-          // Optional: Save user data if your API returns it
-          if (result.user) {
-            localStorage.setItem('sprintSightUser', JSON.stringify(result.user));
-          }
+          if (result.data) localStorage.setItem('sprintSightUser', JSON.stringify(result.data));
           
           setIsError(false);
           setMessage('Login successful! Redirecting...');
           setTimeout(() => { navigate('/dashboard'); }, 800);
         } else {
-          // API rejected the login (e.g., wrong password)
           setIsError(true);
           setMessage(result.message || 'Invalid username or password.');
         }
       } else {
-        // --- 2. REAL SIGNUP API CALL ---
-        const response = await fetch(`${API_BASE_URL}/signup`, {
+
+        // refresh jwt token
+        const refresh = await fetch(`api/auth/refresh` , {
+          method : 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
+          }
+        });
+
+        // --- 2. UPDATED SIGNUP API CALL ---
+        const response = await fetch(`api/auth/signup`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include', // Fixed: Ensure cookies work for CORS
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-XSRF-TOKEN': getCookie('XSRF-TOKEN') // Included just in case your backend requires it for signup too
+          },
           body: JSON.stringify({
+            fullName: data.fullName,
             username: data.username,
-            password: data.password,
-            Credentials: 'include' // Ensure cookies are included for CORS requests
+            email: data.email,
+            password: data.password
           })
         });
 
@@ -134,9 +161,9 @@ const Login = () => {
           setMessage('Account created successfully! Please log in.');
           setIsLoginView(true); // Flip back to the login screen
         } else {
-          // API rejected signup (e.g., username already exists)
           setIsError(true);
-          setMessage(result.message || 'Failed to create account. Username might be taken.');
+          // Safely extract the backend error message if they sent one
+          setMessage(result.message || result.error || 'Failed to create account. Username or Email might be taken.');
         }
       }
     } catch (error) {
@@ -170,7 +197,7 @@ const Login = () => {
       <div className="login-container">
         <div className="logo-section">
           <img
-            src={logoSrc}
+            src="/sprint-sight-logo.png"
             alt="Sprint Sight Logo"
             className="logo-image"
             onError={(e) => { e.target.onerror = null; }}
@@ -182,21 +209,48 @@ const Login = () => {
         </div>
 
         <form className="login-form" onSubmit={handleSubmit(onSubmit)}>
-          <div className="input-group">
+          
+          {/* --- NEW: EXTRA FIELDS FOR SIGN UP ONLY --- */}
+          {!isLoginView && (
+            <>
+              <div className="input-group" style={{ width: '100%' }}>
+                <input
+                  type="text"
+                  placeholder="Full Name"
+                  className={`custom-input ${errors.fullName ? 'input-error' : ''}`}
+                  {...register("fullName")}
+                />
+                {errors.fullName && <span className="error-text">{errors.fullName.message}</span>}
+              </div>
+
+              <div className="input-group" style={{ width: '100%' }}>
+                <input
+                  type="email"
+                  placeholder="Email Address"
+                  className={`custom-input ${errors.email ? 'input-error' : ''}`}
+                  {...register("email")}
+                />
+                {errors.email && <span className="error-text">{errors.email.message}</span>}
+              </div>
+            </>
+          )}
+
+          {/* --- ALWAYS VISIBLE FIELDS --- */}
+          <div className="input-group" style={{ width: '100%' }}>
             <input
               type="text"
-              placeholder="username"
+              placeholder="Username"
               className={`custom-input ${errors.username ? 'input-error' : ''}`}
               {...register("username")}
             />
             {errors.username && <span className="error-text">{errors.username.message}</span>}
           </div>
 
-          <div className="input-group">
+          <div className="input-group" style={{ width: '100%' }}>
             <div className="password-input-container">
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="password"
+                placeholder="Password"
                 className={`custom-input ${errors.password ? 'input-error' : ''}`}
                 {...register("password")}
               />
