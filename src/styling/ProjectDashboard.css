@@ -519,3 +519,87 @@
   width: 100%; /* Ensures the input stretches to fill the flex container */
   box-sizing: border-box;
 }
+
+/* --- NEW EXTRACTED CLASSES (From Inline Styles) --- */
+
+.header-logo {
+  height: 32px;
+  width: auto;
+  margin-right: 10px;
+}
+
+.brand-title {
+  color: var(--accent-color);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  position: relative;
+}
+
+.workspace-header {
+  position: relative;
+  z-index: 100;
+}
+
+.sort-container {
+  position: relative;
+}
+
+.sort-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  z-index: 9999;
+  display: block;
+  min-width: 150px;
+}
+
+.project-meta-spaced {
+  justify-content: space-between;
+}
+
+/* Empty State Styling */
+.empty-state {
+  text-align: center;
+  padding: 4rem 0;
+  color: var(--text-muted);
+  width: 100%;
+  grid-column: 1 / -1;
+}
+
+.empty-state h2 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-main);
+}
+
+/* Profile Modal Specifics */
+.profile-modal {
+  max-width: 450px;
+}
+
+.profile-message-text {
+  color: var(--accent-color);
+  font-weight: bold;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.profile-actions {
+  justify-content: space-between;
+  margin-top: 1.5rem;
+}
+
+.delete-account-btn {
+  color: #e74c3c !important;
+  padding: 0 !important;
+}
+
+.modal-btn-group {
+  display: flex;
+  gap: 1rem;
+}

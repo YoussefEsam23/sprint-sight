@@ -5,22 +5,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import '../styling/ProjectDashboard.css';
 
-// --- NEW: IMPORT LOGOS ---
+// --- IMPORT LOGOS ---
 import logoLight from '/sprint-sight-logo.png';
 import logoDark from '/sprint-sight-logo-dark.png';
 
 const projectSchema = z.object({
   name: z.string().min(3, "Project name must be at least 3 characters"),
-  description: z.string().min(10, "Please provide a short description (min 10 characters)"),
-  isPrivate: z.boolean()
+  description: z.string().min(10, "Please provide a short description (min 10 characters)")
 });
 
-const initialProjects = [
-  { id: 1, name: 'Project 1', description: 'Brand ecosystem and design system development for the 2024 launch.', status: 'ACTIVE', deadline: 'Oct 24', isPrivate: false },
-  { id: 2, name: 'Cyanide Sprint', description: 'High-speed prototyping phase for the decentralized asset marketplace.', status: 'ON HOLD', deadline: 'Nov 12', isPrivate: true },
-  { id: 3, name: 'Digital Transformation', description: 'Migrating legacy internal tools to the new unified Atelier cloud infrastructure.', status: 'ACTIVE', deadline: 'Dec 01', isPrivate: false }
-];
-
+// Helper to get CSRF token
 const getCookie = (name) => {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
@@ -29,19 +23,19 @@ const getCookie = (name) => {
 };
 
 const ProjectDashboard = () => {
-  const [projects, setProjects] = useState(() => {
-    const savedProjects = localStorage.getItem('sprintSightMockProjects');
-    return savedProjects ? JSON.parse(savedProjects) : initialProjects;
-  });
-
-  useEffect(() => {
-    localStorage.setItem('sprintSightMockProjects', JSON.stringify(projects));
-  }, [projects]); 
+  // --- REAL API PROJECT STATES ---
+  const [projects, setProjects] = useState([]);
+  const [isProjectsLoading, setIsProjectsLoading] = useState(true);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [openMenuId, setOpenMenuId] = useState(null); 
   const [editingProjectId, setEditingProjectId] = useState(null);
+  
+  // --- SEARCH & SORT STATES ---
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortOption, setSortOption] = useState('newest'); 
+  const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
   
   // --- THEME ENGINE STATE ---
   const [theme, setTheme] = useState(localStorage.getItem('sprintSightTheme') || 'system');
@@ -51,7 +45,6 @@ const ProjectDashboard = () => {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [profileMessage, setProfileMessage] = useState('');
 
-  // Get current user info from local storage (or fallback to placeholders)
   const storedUser = JSON.parse(localStorage.getItem('sprintSightUser')) || {};
   const [currentUser, setCurrentUser] = useState({
     username: storedUser.username || 'User',
@@ -68,19 +61,54 @@ const ProjectDashboard = () => {
 
   const navigate = useNavigate();
 
-  // --- NEW: LOGO SELECTION LOGIC ---
   const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
   const logoSrc = isDark ? logoDark : logoLight;
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
-    resolver: zodResolver(projectSchema),
-    defaultValues: { isPrivate: false }
+    resolver: zodResolver(projectSchema)
   });
 
+  // --- FETCH PROJECTS ON LOAD (GET) ---
+  useEffect(() => {
+    const fetchProjects = async () => {
+      setIsProjectsLoading(true);
+      try {
+        const token = localStorage.getItem('sprintSightToken');
+        const response = await fetch('api/projects', {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
+          }
+        });
+
+        if (response.ok) {
+          // Parse the JSON from the backend
+          const jsonResponse = await response.json();
+    
+          const extractedProjects = jsonResponse.data;
+          
+          setProjects(extractedProjects); 
+        } else {
+          console.error("Failed to fetch projects. Status:", response.status);
+        }
+      } catch (error) {
+        console.error("Network error fetching projects:", error);
+      } finally {
+        setIsProjectsLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
+
+  // --- CLICK OUTSIDE HANDLER ---
   useEffect(() => {
     const handleClickOutside = () => {
       setOpenMenuId(null);
-      setIsProfileDropdownOpen(false); // Close dropdown when clicking outside
+      setIsProfileDropdownOpen(false); 
+      setIsSortDropdownOpen(false);    
     };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
@@ -103,11 +131,9 @@ const ProjectDashboard = () => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = () => { if (theme === 'system') applyTheme('system'); };
     mediaQuery.addEventListener('change', handleChange);
-    
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [theme]);
 
-  // --- THEME CYCLING LOGIC ---
   const cycleTheme = () => {
     if (theme === 'light') setTheme('dark');
     else if (theme === 'dark') setTheme('system');
@@ -125,50 +151,136 @@ const ProjectDashboard = () => {
 
   const handleEditClick = (e, project) => {
     e.stopPropagation();
-    setEditingProjectId(project.id);
-    reset({ name: project.name, description: project.description, isPrivate: project.isPrivate });
+    const id = project.id || project._id;
+    setEditingProjectId(id);
+    reset({ name: project.name, description: project.description });
     setOpenMenuId(null); 
     setIsModalOpen(true); 
   };
 
-  const handleDeleteClick = (e, id) => {
+  // --- DELETE PROJECT API ---
+  const handleDeleteClick = async (e, id) => {
     e.stopPropagation();
-    if (window.confirm("Are you sure you want to delete this project?")) {
-      setProjects(projects.filter(p => p.id !== id));
-    }
+    if (!window.confirm("Are you sure you want to delete this project?")) return;
+    
     setOpenMenuId(null);
+    try {
+      const token = localStorage.getItem('sprintSightToken');
+      const response = await fetch(`api/projects/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
+        }
+      });
+
+      if (response.ok) {
+        setProjects(projects.filter(p => (p.id || p._id) !== id));
+      } else {
+        alert("Failed to delete project. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error deleting project:", error);
+    }
   };
 
   const openNewProjectModal = () => {
     setEditingProjectId(null); 
-    reset({ name: '', description: '', isPrivate: false }); 
+    reset({ name: '', description: '' }); 
     setIsModalOpen(true);
   };
 
   const closeModal = () => { setIsModalOpen(false); reset(); };
 
+  // --- CREATE / UPDATE PROJECT API ---
+  const onSubmit = async (data) => {
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('sprintSightToken');
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
+      };
+
+      if (editingProjectId) {
+        // --- EDIT PROJECT (PUT) ---
+        const response = await fetch(`api/projects/${editingProjectId}`, {
+          method: 'PUT',
+          credentials: 'include',
+          headers,
+          body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+          const rawResponse = await response.json();
+          
+          // Smart extraction: Look inside .data, or .project, or use the root response
+          const updatedProject = rawResponse.data || rawResponse.project || rawResponse;
+          
+          // Update the state instantly
+          setProjects(prevProjects => prevProjects.map(p => 
+            (p.id || p._id) === editingProjectId ? updatedProject : p
+          ));
+          
+          setIsModalOpen(false);
+          reset(); 
+        } else {
+          alert("Failed to update project");
+        }
+      } else {
+        // --- CREATE PROJECT (POST) ---
+        const response = await fetch(`api/projects`, {
+          method: 'POST',
+          credentials: 'include',
+          headers,
+          body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+          const rawResponse = await response.json();
+          
+          // Smart extraction: Look inside .data, or .project, or use the root response
+          const newProject = rawResponse.data || rawResponse.project || rawResponse;
+          
+          // Add the new project to the top of the state instantly
+          setProjects(prevProjects => [...prevProjects, newProject]);
+          
+          setIsModalOpen(false);
+          reset(); 
+        } else {
+          alert("Failed to create project");
+        }
+      }
+    } catch (error) {
+      console.error("Error saving project:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // --- ACCOUNT & PROFILE HANDLERS ---
   const handleLogout = async () => {
     try {
       const token = localStorage.getItem('sprintSightToken');
-      // Replace this URL with your real backend logout endpoint if needed
       
-        // refresh jwt token
-        const refresh = await fetch(`api/auth/refresh` , {
-          method : 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
-          }
-        });
+      await fetch(`api/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
+        }
+      });
 
       await fetch('api/auth/logout', {
         method: 'POST',
         credentials: 'include', 
-        headers: { 'Authorization': `Bearer ${token}`,
-        'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
-       }
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
+        }
       });
     } catch (err) {
       console.error("Logout API failed, forcing local logout.");
@@ -189,15 +301,14 @@ const ProjectDashboard = () => {
       const rawUserData = JSON.parse(localStorage.getItem('sprintSightUser')) || {};
       const userId = rawUserData.id || rawUserData._id;
 
-      // refresh jwt token
-        const refresh = await fetch(`api/auth/refresh` , {
-          method : 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
-          }
-        });
+      await fetch(`api/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
+        }
+      });
 
       const response = await fetch(`api/users/${userId}`, {
         method: 'PUT',
@@ -212,7 +323,7 @@ const ProjectDashboard = () => {
       if (response.ok) {
         setProfileMessage('Profile updated successfully!');
         const updatedUser = { ...currentUser, ...profileFormData };
-        delete updatedUser.password; // Keep passwords out of local storage!
+        delete updatedUser.password; 
         localStorage.setItem('sprintSightUser', JSON.stringify(updatedUser));
         setCurrentUser(updatedUser);
       } else {
@@ -238,21 +349,22 @@ const ProjectDashboard = () => {
         return;
       }
 
-      // refresh jwt token
-        const refresh = await fetch(`api/auth/refresh` , {
-          method : 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
-          }
-        });
+      await fetch(`api/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
+        }
+      });
         
       const response = await fetch(`api/users/${userId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}`,
-      credentials: 'include',
-      'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')}
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'credentials': 'include',
+          'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
+        }
       });
 
       if (response.ok) {
@@ -267,25 +379,39 @@ const ProjectDashboard = () => {
     }
   };
 
-  const onSubmit = async (data) => {
-    setIsLoading(true);
-    try {
-      if (editingProjectId) {
-        setProjects(projects.map(p => 
-          p.id === editingProjectId ? { ...p, name: data.name, description: data.description, isPrivate: data.isPrivate } : p
-        ));
-      } else {
-        const newProject = { id: Date.now(), name: data.name, description: data.description, status: 'ACTIVE', deadline: 'TBD', isPrivate: data.isPrivate };
-        setProjects([newProject, ...projects]);
+// --- BULLETPROOF FILTER & SORT LOGIC ---
+  const safeProjects = Array.isArray(projects) ? projects : [];
+
+  const filteredAndSortedProjects = safeProjects
+    // 1. Attach the original index so we remember the order the database sent them
+    .map((project, index) => ({ ...project, _originalIndex: index }))
+    .filter(project => {
+      const projectName = project.name || '';
+      const projectDesc = project.description || '';
+      const query = (searchQuery || '').toLowerCase();
+      
+      return projectName.toLowerCase().includes(query) || 
+             projectDesc.toLowerCase().includes(query);
+    })
+    .sort((a, b) => {
+      if (sortOption === 'newest') {
+        // b - a puts the highest index (the items at the end of the list) first
+        return b._originalIndex - a._originalIndex; 
       }
-      setIsModalOpen(false);
-      reset(); 
-    } catch (error) {
-      console.error("Error saving project:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      if (sortOption === 'oldest') {
+        // a - b puts the lowest index (the items at the start of the list) first
+        return a._originalIndex - b._originalIndex;
+      }
+
+      // 2. Alphabetical Sorting (A-Z, Z-A)
+      const nameA = (a.name || '').toLowerCase();
+      const nameB = (b.name || '').toLowerCase();
+      
+      if (sortOption === 'name-asc') return nameA.localeCompare(nameB);
+      if (sortOption === 'name-desc') return nameB.localeCompare(nameA);
+      
+      return 0;
+    });
 
   return (
     <div className="dashboard-wrapper">
@@ -294,39 +420,41 @@ const ProjectDashboard = () => {
           <img 
               src={logoSrc} 
               alt="Sprint Sight Logo" 
-              style={{ height: '32px', width: 'auto', marginRight: '10px' }} 
+              className="header-logo"
             />
-          <h1 className="app-title" style={{color: 'var(--accent-color)'}}>Sprint Sight</h1>
+          <h1 className="app-title brand-title">Sprint Sight</h1>
         </div>
         <div className="header-center">
           <div className="search-bar-container">
             <span className="search-icon">🔍</span>
-            <input type="search" placeholder="Search project..." className="search-input" />
+            <input 
+              type="search" 
+              placeholder="Search project..." 
+              className="search-input" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
         </div>
         
-        <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', position: 'relative' }}>
+        <div className="header-right">
           
-          {/* --- THEME TOGGLE BUTTON --- */}
           <button className="icon-btn" onClick={cycleTheme} title={`Theme: ${theme}`}>
             {getThemeIcon()}
           </button>
           
-          {/* Notification Emoji */}
           <button className="icon-btn" title="Notifications">
             🔔
           </button>
           
-          {/* USER PROFILE ICON & DROPDOWN TRIGGER */}
           <div 
             className="user-profile-icon" 
-            onClick={(e) => { e.stopPropagation(); setIsProfileDropdownOpen(!isProfileDropdownOpen); }}
+            onClick={(e) => { e.stopPropagation(); setIsProfileDropdownOpen(!isProfileDropdownOpen); setIsSortDropdownOpen(false); }}
             title="Account Menu"
           >
             <span className="user-initial">{currentUser.username.charAt(0).toUpperCase()}</span>
           </div>
 
-          {/* THE PROFILE DROPDOWN MENU */}
           {isProfileDropdownOpen && (
             <div className="profile-dropdown" onClick={(e) => e.stopPropagation()}>
               <div className="profile-dropdown-header">
@@ -368,48 +496,82 @@ const ProjectDashboard = () => {
 
         <div className="workspace-header">
           <span className="workspace-label">LIVE WORKSPACE</span>
-          <button className="sort-btn">Sort <span>▼</span></button>
+          
+          <div className="sort-container"> 
+            <button 
+              className="sort-btn" 
+              onClick={(e) => { e.stopPropagation(); setIsSortDropdownOpen(!isSortDropdownOpen); setIsProfileDropdownOpen(false); }}
+            >
+              Sort {sortOption === 'newest' ? '(Newest)' : sortOption === 'oldest' ? '(Oldest)' : sortOption === 'name-asc' ? '(A-Z)' : '(Z-A)'} <span>▼</span>
+            </button>
+            
+            {isSortDropdownOpen && (
+              <div className="dropdown-menu sort-menu">
+                <button className="dropdown-item" onClick={() => { setSortOption('newest'); setIsSortDropdownOpen(false); }}>Newest First</button>
+                <button className="dropdown-item" onClick={() => { setSortOption('oldest'); setIsSortDropdownOpen(false); }}>Oldest First</button>
+                <button className="dropdown-item" onClick={() => { setSortOption('name-asc'); setIsSortDropdownOpen(false); }}>Name (A-Z)</button>
+                <button className="dropdown-item" onClick={() => { setSortOption('name-desc'); setIsSortDropdownOpen(false); }}>Name (Z-A)</button>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="project-list">
-          {projects.map((project) => (
-            <div key={project.id} className="project-card" style={{ position: 'relative', zIndex: openMenuId === project.id ? 50 : 1 }} onClick={() => handleProjectClick(project.id)}>
-              <div className="project-icon">
-                 {project.isPrivate ? '🔒' : '📁'}
-              </div>
-              
-              <div className="project-info">
-                <h3 className="project-name">{project.name}</h3>
-                <p className="project-desc">{project.description}</p>
-              </div>
-
-              <div className="project-meta">
-                <span className={`status-badge ${project.status === 'ACTIVE' ? 'active' : 'on-hold'}`}>
-                  {project.status}
-                </span>
-                
-                <div className="team-avatars">
-                  <div className="avatar"></div>
-                  <div className="avatar"></div>
-                </div>
-
-                <div className="deadline-info">
-                  <span className="deadline-label">DEADLINE</span>
-                  <span className="deadline-date">{project.deadline}</span>
-                </div>
-                
-                <div className="menu-container">
-                  <button className="options-btn" onClick={(e) => handleMenuClick(e, project.id)}>⋮</button>
-                  {openMenuId === project.id && (
-                    <div className="dropdown-menu">
-                      <button className="dropdown-item" onClick={(e) => handleEditClick(e, project)}>✏️ Edit Project</button>
-                      <button className="dropdown-item delete-item" onClick={(e) => handleDeleteClick(e, project.id)}>🗑️ Delete Project</button>
+          {/* Show loader if data is fetching */}
+          {isProjectsLoading ? (
+             <div className="empty-state">
+               <h2>Loading projects...</h2>
+             </div>
+          ) : (
+            <>
+              {filteredAndSortedProjects.map((project) => {
+                const projectId = project.id || project._id; // Handle both id types safely
+                return (
+                  <div key={projectId} className="project-card" style={{ zIndex: openMenuId === projectId ? 50 : 1 }} onClick={() => handleProjectClick(projectId)}>
+                    <div className="project-icon">
+                       📁
                     </div>
-                  )}
+                    
+                    <div className="project-info">
+                      <h3 className="project-name">{project.name}</h3>
+                      <p className="project-desc">{project.description}</p>
+                    </div>
+
+                    <div className="project-meta project-meta-spaced">
+                      <div className="team-avatars">
+                        <div className="avatar"></div>
+                        <div className="avatar"></div>
+                      </div>
+
+                      <div className="menu-container">
+                        <button className="options-btn" onClick={(e) => handleMenuClick(e, projectId)}>⋮</button>
+                        {openMenuId === projectId && (
+                          <div className="dropdown-menu">
+                            <button className="dropdown-item" onClick={(e) => handleEditClick(e, project)}>✏️ Edit Project</button>
+                            <button className="dropdown-item delete-item" onClick={(e) => handleDeleteClick(e, projectId)}>🗑️ Delete Project</button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {filteredAndSortedProjects.length === 0 && !isProjectsLoading && projects.length > 0 && (
+                <div className="empty-state">
+                  <h2>No projects found</h2>
+                  <p>Try adjusting your search criteria.</p>
                 </div>
-              </div>
-            </div>
-          ))}
+              )}
+
+              {projects.length === 0 && !isProjectsLoading && (
+                <div className="empty-state">
+                  <h2>No projects yet</h2>
+                  <p>Click '+ NEW PROJECT' to get started.</p>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </main>
 
@@ -432,16 +594,6 @@ const ProjectDashboard = () => {
                 {errors.description && <span className="error-text">{errors.description.message}</span>}
               </div>
 
-              <div className="form-group checkbox-group">
-                <label className="checkbox-label">
-                  <input type="checkbox" className="custom-checkbox" {...register("isPrivate")} />
-                  <div className="checkbox-text">
-                    <strong>Make this project Private</strong>
-                    <p>Only you and invited members can see this project.</p>
-                  </div>
-                </label>
-              </div>
-
               <div className="modal-actions">
                 <button type="button" className="modal-btn cancel-btn" onClick={closeModal} disabled={isLoading}>Cancel</button>
                 <button type="submit" className="modal-btn save-btn" disabled={isLoading}>
@@ -456,7 +608,7 @@ const ProjectDashboard = () => {
       {/* --- ACCOUNT SETTINGS / UPDATE USER MODAL --- */}
       {isProfileModalOpen && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '450px' }}>
+          <div className="modal-content profile-modal">
             <h2 className="modal-title">Account Settings</h2>
             
             <form className="modal-form" onSubmit={handleUpdateProfile}>
@@ -505,16 +657,16 @@ const ProjectDashboard = () => {
               </div>
 
               {profileMessage && (
-                <p style={{ color: 'var(--accent-color)', fontWeight: 'bold', fontSize: '0.85rem', textAlign: 'center' }}>
+                <p className="profile-message-text">
                   {profileMessage}
                 </p>
               )}
 
-              <div className="modal-actions" style={{ justifyContent: 'space-between', marginTop: '1.5rem' }}>
-                <button type="button" className="modal-btn cancel-btn" style={{ color: '#e74c3c', padding: '0' }} onClick={handleDeleteAccount}>
+              <div className="modal-actions profile-actions">
+                <button type="button" className="modal-btn cancel-btn delete-account-btn" onClick={handleDeleteAccount}>
                   Delete Account
                 </button>
-                <div style={{ display: 'flex', gap: '1rem' }}>
+                <div className="modal-btn-group">
                   <button type="button" className="modal-btn cancel-btn" onClick={() => setIsProfileModalOpen(false)}>Cancel</button>
                   <button type="submit" className="modal-btn save-btn" disabled={isLoading}>
                     {isLoading ? 'Saving...' : 'Save Changes'}
