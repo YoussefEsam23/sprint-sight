@@ -9,6 +9,8 @@ import '../styling/ProjectDashboard.css';
 import logoLight from '/sprint-sight-logo.png';
 import logoDark from '/sprint-sight-logo-dark.png';
 
+import NotificationBell from './NotificationBell';
+
 const projectSchema = z.object({
   name: z.string().min(3, "Project name must be at least 3 characters"),
   description: z.string().min(10, "Please provide a short description (min 10 characters)")
@@ -46,6 +48,7 @@ const ProjectDashboard = () => {
   const [profileMessage, setProfileMessage] = useState('');
 
   const storedUser = JSON.parse(localStorage.getItem('sprintSightUser')) || {};
+  const currentUserId = storedUser.id || storedUser._id;
   const [currentUser, setCurrentUser] = useState({
     username: storedUser.username || 'User',
     fullName: storedUser.fullName || 'My Account',
@@ -68,31 +71,50 @@ const ProjectDashboard = () => {
     resolver: zodResolver(projectSchema)
   });
 
-  // --- FETCH PROJECTS ON LOAD (GET) ---
-  useEffect(() => {
-    const fetchProjects = async () => {
+  // --- FETCH PROJECTS ON LOAD (GET ALL: OWNED + MEMBER) ---
+ /*  useEffect(() => {
+    const fetchAllProjects = async () => {
       setIsProjectsLoading(true);
       try {
         const token = localStorage.getItem('sprintSightToken');
-        const response = await fetch('api/projects', {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
-          }
-        });
+        const headers = {
+          'Authorization': `Bearer ${token}`,
+          'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
+        };
 
-        if (response.ok) {
-          // Parse the JSON from the backend
-          const jsonResponse = await response.json();
-    
-          const extractedProjects = jsonResponse.data;
-          
-          setProjects(extractedProjects); 
+        // 1. Fire BOTH requests simultaneously
+        const [ownedResponse, memberResponse] = await Promise.all([
+          fetch('api/projects/owned', { method: 'GET', credentials: 'include', headers }),
+          fetch('api/projects/member', { method: 'GET', credentials: 'include', headers })
+        ]);
+        
+        let combinedProjects = [];
+
+        // 2. Parse Owned Projects
+        if (ownedResponse.ok) {
+          const ownedJson = await ownedResponse.json();
+          const owned = ownedJson.data || ownedJson || [];
+          combinedProjects = [...combinedProjects, ...owned];
         } else {
-          console.error("Failed to fetch projects. Status:", response.status);
+          console.error("Failed to fetch owned projects. Status:", ownedResponse.status);
         }
+
+        // 3. Parse Member Projects
+        if (memberResponse.ok) {
+          const memberJson = await memberResponse.json();
+          const member = memberJson.data || memberJson || [];
+          combinedProjects = [...combinedProjects, ...member];
+        } else {
+          console.error("Failed to fetch member projects. Status:", memberResponse.status);
+        }
+
+        // 4. Deduplicate (Just in case the backend returns a project in both lists)
+        const uniqueProjects = Array.from(
+          new Map(combinedProjects.map(project => [project.id || project._id, project])).values()
+        );
+
+        setProjects(uniqueProjects); 
+
       } catch (error) {
         console.error("Network error fetching projects:", error);
       } finally {
@@ -100,7 +122,60 @@ const ProjectDashboard = () => {
       }
     };
 
-    fetchProjects();
+    fetchAllProjects();
+  }, []); */
+
+  const fetchAllProjects = async () => {
+      setIsProjectsLoading(true);
+      try {
+        const token = localStorage.getItem('sprintSightToken');
+        const headers = {
+          'Authorization': `Bearer ${token}`,
+          'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
+        };
+
+        // 1. Fire BOTH requests simultaneously
+        const [ownedResponse, memberResponse] = await Promise.all([
+          fetch('api/projects/owned', { method: 'GET', credentials: 'include', headers }),
+          fetch('api/projects/member', { method: 'GET', credentials: 'include', headers })
+        ]);
+        
+        let combinedProjects = [];
+
+        // 2. Parse Owned Projects
+        if (ownedResponse.ok) {
+          const ownedJson = await ownedResponse.json();
+          const owned = ownedJson.data || ownedJson || [];
+          combinedProjects = [...combinedProjects, ...owned];
+        } else {
+          console.error("Failed to fetch owned projects. Status:", ownedResponse.status);
+        }
+
+        // 3. Parse Member Projects
+        if (memberResponse.ok) {
+          const memberJson = await memberResponse.json();
+          const member = memberJson.data || memberJson || [];
+          combinedProjects = [...combinedProjects, ...member];
+        } else {
+          console.error("Failed to fetch member projects. Status:", memberResponse.status);
+        }
+
+        // 4. Deduplicate (Just in case the backend returns a project in both lists)
+        const uniqueProjects = Array.from(
+          new Map(combinedProjects.map(project => [project.id || project._id, project])).values()
+        );
+
+        setProjects(uniqueProjects); 
+
+      } catch (error) {
+        console.error("Network error fetching projects:", error);
+      } finally {
+        setIsProjectsLoading(false);
+      }
+    };
+
+    useEffect(() => {
+    fetchAllProjects();
   }, []);
 
   // --- CLICK OUTSIDE HANDLER ---
@@ -215,11 +290,8 @@ const ProjectDashboard = () => {
 
         if (response.ok) {
           const rawResponse = await response.json();
-          
-          // Smart extraction: Look inside .data, or .project, or use the root response
           const updatedProject = rawResponse.data || rawResponse.project || rawResponse;
           
-          // Update the state instantly
           setProjects(prevProjects => prevProjects.map(p => 
             (p.id || p._id) === editingProjectId ? updatedProject : p
           ));
@@ -240,11 +312,8 @@ const ProjectDashboard = () => {
 
         if (response.ok) {
           const rawResponse = await response.json();
-          
-          // Smart extraction: Look inside .data, or .project, or use the root response
           const newProject = rawResponse.data || rawResponse.project || rawResponse;
           
-          // Add the new project to the top of the state instantly
           setProjects(prevProjects => [...prevProjects, newProject]);
           
           setIsModalOpen(false);
@@ -383,7 +452,6 @@ const ProjectDashboard = () => {
   const safeProjects = Array.isArray(projects) ? projects : [];
 
   const filteredAndSortedProjects = safeProjects
-    // 1. Attach the original index so we remember the order the database sent them
     .map((project, index) => ({ ...project, _originalIndex: index }))
     .filter(project => {
       const projectName = project.name || '';
@@ -394,16 +462,9 @@ const ProjectDashboard = () => {
              projectDesc.toLowerCase().includes(query);
     })
     .sort((a, b) => {
-      if (sortOption === 'newest') {
-        // b - a puts the highest index (the items at the end of the list) first
-        return b._originalIndex - a._originalIndex; 
-      }
-      if (sortOption === 'oldest') {
-        // a - b puts the lowest index (the items at the start of the list) first
-        return a._originalIndex - b._originalIndex;
-      }
+      if (sortOption === 'newest') return b._originalIndex - a._originalIndex; 
+      if (sortOption === 'oldest') return a._originalIndex - b._originalIndex;
 
-      // 2. Alphabetical Sorting (A-Z, Z-A)
       const nameA = (a.name || '').toLowerCase();
       const nameB = (b.name || '').toLowerCase();
       
@@ -443,9 +504,7 @@ const ProjectDashboard = () => {
             {getThemeIcon()}
           </button>
           
-          <button className="icon-btn" title="Notifications">
-            🔔
-          </button>
+            <NotificationBell onInviteAccepted={fetchAllProjects} />
           
           <div 
             className="user-profile-icon" 
@@ -517,7 +576,6 @@ const ProjectDashboard = () => {
         </div>
 
         <div className="project-list">
-          {/* Show loader if data is fetching */}
           {isProjectsLoading ? (
              <div className="empty-state">
                <h2>Loading projects...</h2>
@@ -525,13 +583,28 @@ const ProjectDashboard = () => {
           ) : (
             <>
               {filteredAndSortedProjects.map((project) => {
-                const projectId = project.id || project._id; // Handle both id types safely
+                const projectId = project.id || project._id; 
+                
+                // --- ROLE CALCULATION ---
+                const isCreator = project.createdBy?.id === currentUserId;
+                
                 return (
                   <div key={projectId} className="project-card" style={{ zIndex: openMenuId === projectId ? 50 : 1 }} onClick={() => handleProjectClick(projectId)}>
                     <div className="project-icon">
                        📁
                     </div>
-                    
+                      
+                      <span style={{
+                        fontSize: '0.75rem',
+                        fontWeight: '600',
+                        padding: '4px 8px',
+                        borderRadius: '12px',
+                        backgroundColor: isCreator ? 'var(--primary-color, #4A90E2)' : 'var(--bg-secondary, #E2E8F0)',
+                        color: isCreator ? '#fff' : 'var(--text-secondary, #64748B)'
+                      }}>
+                        {isCreator ? '👑 Creator' : '👥 Member'}
+                      </span>
+                      
                     <div className="project-info">
                       <h3 className="project-name">{project.name}</h3>
                       <p className="project-desc">{project.description}</p>
@@ -548,7 +621,10 @@ const ProjectDashboard = () => {
                         {openMenuId === projectId && (
                           <div className="dropdown-menu">
                             <button className="dropdown-item" onClick={(e) => handleEditClick(e, project)}>✏️ Edit Project</button>
-                            <button className="dropdown-item delete-item" onClick={(e) => handleDeleteClick(e, projectId)}>🗑️ Delete Project</button>
+                            
+                            {isCreator && (
+                               <button className="dropdown-item delete-item" onClick={(e) => handleDeleteClick(e, projectId)}>🗑️ Delete Project</button>
+                            )}
                           </div>
                         )}
                       </div>

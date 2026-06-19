@@ -4,6 +4,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import '../styling/Login.css';
+import logoLight from '/sprint-sight-logo.png';
+import logoDark from '/sprint-sight-logo-dark.png';
 
 // --- 1. UPDATED VALIDATION SCHEMAS ---
 const loginSchema = z.object({
@@ -48,6 +50,9 @@ const Login = () => {
     mode: "onChange"
   });
 
+    const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    const logoSrc = isDark ? logoDark : logoLight;
+
   // Theme Logic
   useEffect(() => {
     const applyTheme = (selectedTheme) => {
@@ -86,9 +91,10 @@ const Login = () => {
     setIsError(false);
 
     try {
+      const token = localStorage.getItem('sprintSightToken');
       if (isLoginView) {
         // refresh jwt token
-        const refresh = await fetch(`api/auth/refresh` , {
+        await fetch(`api/auth/refresh` , {
           method : 'POST',
           credentials: 'include',
           headers: {
@@ -104,6 +110,7 @@ const Login = () => {
           credentials: 'include', // Fixed: This belongs outside the body
           headers: { 
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
             'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
           },
           body: JSON.stringify({
@@ -128,7 +135,7 @@ const Login = () => {
       } else {
 
         // refresh jwt token
-        const refresh = await fetch(`api/auth/refresh` , {
+         await fetch(`api/auth/refresh` , {
           method : 'POST',
           credentials: 'include',
           headers: {
@@ -143,6 +150,7 @@ const Login = () => {
           credentials: 'include', // Fixed: Ensure cookies work for CORS
           headers: { 
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
             'X-XSRF-TOKEN': getCookie('XSRF-TOKEN') // Included just in case your backend requires it for signup too
           },
           body: JSON.stringify({
@@ -197,7 +205,7 @@ const Login = () => {
       <div className="login-container">
         <div className="logo-section">
           <img
-            src="/sprint-sight-logo.png"
+            src={logoSrc}
             alt="Sprint Sight Logo"
             className="logo-image"
             onError={(e) => { e.target.onerror = null; }}

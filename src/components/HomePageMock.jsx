@@ -4,22 +4,23 @@ import '../styling/HomePage.css';
 
 import BacklogViewMock from './BacklogViewMock';
 import SprintsViewMock from './SprintsViewMock';
+import TeamViewMock from './TeamViewMock';
+import NotificationBell from './NotificationBell';
 
 const HomePageMock = () => {
-  const { projectId } = useParams(); 
+  const { projectId } = useParams();
   const navigate = useNavigate();
 
   const [projectName, setProjectName] = useState('Loading...');
   const [activeTab, setActiveTab] = useState('backlog'); 
-  
   const [theme, setTheme] = useState(localStorage.getItem('sprintSightTheme') || 'system');
 
   useEffect(() => {
     const savedProjects = localStorage.getItem('sprintSightMockProjects');
     if (savedProjects) {
       const projectsArray = JSON.parse(savedProjects);
-      const currentProject = projectsArray.find(p => p.id == projectId);
-      setProjectName(currentProject ? currentProject.name : `Project #${projectId.substring(0, 4)}`);
+      const currentProject = projectsArray.find(p => p.id === projectId);
+      setProjectName(currentProject ? currentProject.name : `Project #${projectId?.substring(0, 4)}`);
     }
   }, [projectId]);
 
@@ -55,6 +56,14 @@ const HomePageMock = () => {
     return '💻';
   };
 
+  // Helper to determine the Breadcrumb title
+  const getBreadcrumbTitle = () => {
+    if (activeTab === 'backlog') return 'Main Dashboard';
+    if (activeTab === 'sprints') return 'Active Sprints';
+    if (activeTab === 'team') return 'Team Management';
+    return '';
+  };
+
   return (
     <div className="homepage-wrapper">
       
@@ -76,7 +85,16 @@ const HomePageMock = () => {
               <li className="nav-divider"></li>
               <li><button className="nav-item"><span className="icon">!</span> Market Issues</button></li>
               <li><button className="nav-item"><span className="icon">📖</span> Assets Wiki</button></li>
-              <li><button className="nav-item"><span className="icon">⚙</span> Settings</button></li>
+              
+              {/* --- NEW TEAM TAB --- */}
+              <li>
+                <button 
+                  className={`nav-item ${activeTab === 'team' ? 'active' : ''}`} 
+                  onClick={() => setActiveTab('team')}
+                >
+                  <span className="icon">👥</span> Team
+                </button>
+              </li>
             </ul>
           </nav>
         </div>
@@ -86,25 +104,25 @@ const HomePageMock = () => {
         </div>
       </aside>
 
-      {/* --- NEW: MAIN PANEL WRAPPER --- */}
+      {/* --- MAIN PANEL WRAPPER --- */}
       <div className="main-panel">
         
-        {/* --- NEW: TOP APP BAR --- */}
+        {/* --- TOP APP BAR --- */}
         <header className="top-bar">
           <div className="top-bar-left">
              <span className="breadcrumb">
-               Sprint Sight / <strong style={{color: 'var(--text-main)'}}>{activeTab === 'backlog' ? 'Main Dashboard' : 'Active Sprints'}</strong>
+               Sprint Sight / <strong style={{color: 'var(--text-main)'}}>{getBreadcrumbTitle()}</strong>
              </span>
           </div>
           
-          <div className="top-bar-actions">
+          <div className="top-bar-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
              {/* Icon-only buttons with no outlines */}
              <button className="icon-btn" onClick={cycleTheme} title={`Theme: ${theme}`}>
                {getThemeIcon()}
              </button>
-             <button className="icon-btn" title="Notifications">
-               🔔
-             </button>
+
+               <NotificationBell/>
+             
              <button className="icon-btn" title="Profile">
                👤
              </button>
@@ -117,6 +135,9 @@ const HomePageMock = () => {
           <div key={activeTab} className="tab-content-wrapper">
             {activeTab === 'backlog' && <BacklogViewMock />}
             {activeTab === 'sprints' && <SprintsViewMock />}
+            
+            {/* --- RENDER THE NEW TEAM VIEW --- */}
+            {activeTab === 'team' && <TeamViewMock projectId={projectId} />}
           </div>
         </main>
 

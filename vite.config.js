@@ -12,7 +12,9 @@ export default defineConfig({
     // Keep your proxy so Sprint Sight can still talk to the Render backend
     proxy: {
       '/api': {
-        target: 'https://sprintsight-back.onrender.com',
+        /* target: 'https://sprintsight-back.onrender.com' */
+        target: 'http://localhost:8080/',
+        /* target: 'http://127.0.0.1:8080' */
         changeOrigin: true,
         secure: false, 
       }
