@@ -9,7 +9,9 @@ import '../styling/ProjectDashboard.css';
 import logoLight from '/sprint-sight-logo.png';
 import logoDark from '/sprint-sight-logo-dark.png';
 
+//components
 import NotificationBell from './NotificationBell';
+import UserProfile from './UserProfile';
 
 const projectSchema = z.object({
   name: z.string().min(3, "Project name must be at least 3 characters"),
@@ -70,60 +72,6 @@ const ProjectDashboard = () => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: zodResolver(projectSchema)
   });
-
-  // --- FETCH PROJECTS ON LOAD (GET ALL: OWNED + MEMBER) ---
- /*  useEffect(() => {
-    const fetchAllProjects = async () => {
-      setIsProjectsLoading(true);
-      try {
-        const token = localStorage.getItem('sprintSightToken');
-        const headers = {
-          'Authorization': `Bearer ${token}`,
-          'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
-        };
-
-        // 1. Fire BOTH requests simultaneously
-        const [ownedResponse, memberResponse] = await Promise.all([
-          fetch('api/projects/owned', { method: 'GET', credentials: 'include', headers }),
-          fetch('api/projects/member', { method: 'GET', credentials: 'include', headers })
-        ]);
-        
-        let combinedProjects = [];
-
-        // 2. Parse Owned Projects
-        if (ownedResponse.ok) {
-          const ownedJson = await ownedResponse.json();
-          const owned = ownedJson.data || ownedJson || [];
-          combinedProjects = [...combinedProjects, ...owned];
-        } else {
-          console.error("Failed to fetch owned projects. Status:", ownedResponse.status);
-        }
-
-        // 3. Parse Member Projects
-        if (memberResponse.ok) {
-          const memberJson = await memberResponse.json();
-          const member = memberJson.data || memberJson || [];
-          combinedProjects = [...combinedProjects, ...member];
-        } else {
-          console.error("Failed to fetch member projects. Status:", memberResponse.status);
-        }
-
-        // 4. Deduplicate (Just in case the backend returns a project in both lists)
-        const uniqueProjects = Array.from(
-          new Map(combinedProjects.map(project => [project.id || project._id, project])).values()
-        );
-
-        setProjects(uniqueProjects); 
-
-      } catch (error) {
-        console.error("Network error fetching projects:", error);
-      } finally {
-        setIsProjectsLoading(false);
-      }
-    };
-
-    fetchAllProjects();
-  }, []); */
 
   const fetchAllProjects = async () => {
       setIsProjectsLoading(true);
@@ -505,14 +453,15 @@ const ProjectDashboard = () => {
           </button>
           
             <NotificationBell onInviteAccepted={fetchAllProjects} />
+             <UserProfile /> 
           
-          <div 
+           {/* <div 
             className="user-profile-icon" 
             onClick={(e) => { e.stopPropagation(); setIsProfileDropdownOpen(!isProfileDropdownOpen); setIsSortDropdownOpen(false); }}
             title="Account Menu"
           >
             <span className="user-initial">{currentUser.username.charAt(0).toUpperCase()}</span>
-          </div>
+          </div> */}
 
           {isProfileDropdownOpen && (
             <div className="profile-dropdown" onClick={(e) => e.stopPropagation()}>
@@ -590,45 +539,61 @@ const ProjectDashboard = () => {
                 
                 return (
                   <div key={projectId} className="project-card" style={{ zIndex: openMenuId === projectId ? 50 : 1 }} onClick={() => handleProjectClick(projectId)}>
+                    
                     <div className="project-icon">
                        📁
                     </div>
-                      
-                      <span style={{
-                        fontSize: '0.75rem',
-                        fontWeight: '600',
-                        padding: '4px 8px',
-                        borderRadius: '12px',
-                        backgroundColor: isCreator ? 'var(--primary-color, #4A90E2)' : 'var(--bg-secondary, #E2E8F0)',
-                        color: isCreator ? '#fff' : 'var(--text-secondary, #64748B)'
-                      }}>
-                        {isCreator ? '👑 Creator' : '👥 Member'}
-                      </span>
                       
                     <div className="project-info">
                       <h3 className="project-name">{project.name}</h3>
                       <p className="project-desc">{project.description}</p>
                     </div>
 
-                    <div className="project-meta project-meta-spaced">
-                      <div className="team-avatars">
-                        <div className="avatar"></div>
-                        <div className="avatar"></div>
-                      </div>
+                    <div className="project-meta project-meta-spaced" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                      
+                      <span style={{
+                        fontSize: '0.75rem',
+                        fontWeight: '700',
+                        padding: '6px 14px',
+                        borderRadius: '20px',
+                        backgroundColor: isCreator ? 'rgba(245, 158, 11, 0.15)' : 'var(--bg-hover)',
+                        color: isCreator ? 'var(--accent-color)' : 'var(--text-muted)',
+                        border: isCreator ? '1px solid rgba(245, 158, 11, 0.3)' : '1px solid var(--border-color)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>
+                        {isCreator ? 'Creator' : 'Member'}
+                      </span>
 
-                      <div className="menu-container">
-                        <button className="options-btn" onClick={(e) => handleMenuClick(e, projectId)}>⋮</button>
-                        {openMenuId === projectId && (
-                          <div className="dropdown-menu">
-                            <button className="dropdown-item" onClick={(e) => handleEditClick(e, project)}>✏️ Edit Project</button>
-                            
-                            {isCreator && (
-                               <button className="dropdown-item delete-item" onClick={(e) => handleDeleteClick(e, projectId)}>🗑️ Delete Project</button>
+                      {/* --- ROLE BASED ACCESS CONTROL FOR EDITING --- */}
+                      {(() => {
+                        // Check if backend sent their role. If not, fallback to whether they created it.
+                        const projectRole = project.role || project.projectRole || project.userRole || '';
+                        const canEditProject = isCreator || projectRole === 'SCRUM_MASTER' || projectRole === 'PRODUCT_OWNER';
+
+                        // If they can't edit and aren't the creator, don't even show the ⋮ button!
+                        if (!canEditProject && !isCreator) return null;
+
+                        return (
+                          <div className="menu-container">
+                            <button className="options-btn" onClick={(e) => handleMenuClick(e, projectId)}>⋮</button>
+                            {openMenuId === projectId && (
+                              <div className="dropdown-menu">
+                                {canEditProject && (
+                                  <button className="dropdown-item" onClick={(e) => handleEditClick(e, project)}>Edit Project</button>
+                                )}
+                                
+                                {isCreator && (
+                                   <button className="dropdown-item delete-item" onClick={(e) => handleDeleteClick(e, projectId)}>Delete Project</button>
+                                )}
+                              </div>
                             )}
                           </div>
-                        )}
-                      </div>
+                        );
+                      })()}
+                      
                     </div>
+                    
                   </div>
                 );
               })}

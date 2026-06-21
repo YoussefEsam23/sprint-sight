@@ -1,0 +1,133 @@
+/* Namespace: up- (User Profile) */
+
+/* --- Wrapper & Navbar Button --- */
+.up-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.up-nav-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--bg-card, #1E293B);
+  border: 1px solid var(--border-color, #334155);
+  color: var(--text-main, #F8FAFC);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  outline: none;
+}
+
+.up-nav-btn:hover {
+  border-color: var(--accent-color, #F5A623);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+}
+
+/* --- Dropdown Menu --- */
+.up-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 12px;
+  width: 280px;
+  background-color: #131820;
+  border: 1px solid var(--border-color, #334155);
+  border-radius: 12px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
+  z-index: 9999;
+  animation: up-slide-down 0.2s ease-out;
+  overflow: hidden;
+}
+
+.up-menu-header {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid var(--border-color, #334155);
+}
+
+.up-avatar-large {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-color, #F5A623), #fcd34d);
+  color: #111;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 900;
+  font-size: 1.5rem;
+  margin-right: 15px;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+}
+
+.up-user-info { display: flex; flex-direction: column; overflow: hidden; }
+.up-fullname { font-size: 1rem; font-weight: bold; color: #F8FAFC; margin-bottom: 2px; }
+.up-email { font-size: 0.8rem; color: #94A3B8; }
+
+.up-menu-list { display: flex; flex-direction: column; padding: 10px 0; }
+.up-menu-btn {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 12px 20px;
+  background: transparent;
+  border: none;
+  color: #F8FAFC;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.up-menu-btn:hover { background-color: #1E293B; }
+.up-logout-btn { color: #EF4444; border-top: 1px solid #334155; margin-top: 5px; padding-top: 15px; }
+
+/* --- Settings Modal (Scoped to prevent leaking) --- */
+.up-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+}
+
+.up-modal-box {
+  background-color: #0F172A;
+  padding: 30px;
+  border-radius: 12px;
+  width: 420px;
+  border: 1px solid #334155;
+  color: #F8FAFC;
+}
+
+.up-modal-box h2 { margin: 0 0 24px 0; font-size: 1.5rem; }
+
+/* Scoped inputs: ONLY styles inputs inside the modal */
+.up-modal-box .up-input-group { margin-bottom: 16px; }
+.up-modal-box label { display: block; font-size: 0.85rem; color: #94A3B8; margin-bottom: 8px; }
+.up-modal-box input {
+  width: 100%;
+  padding: 12px;
+  background-color: #1E293B;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  color: #F8FAFC;
+}
+
+.up-modal-footer { display: flex; justify-content: space-between; margin-top: 30px; }
+.up-btn-delete { background: none; border: none; color: #EF4444; font-weight: 600; cursor: pointer; }
+.up-btn-cancel { background: none; border: none; color: #94A3B8; margin-right: 15px; font-weight: 600; cursor: pointer; }
+.up-btn-save { background-color: #F59E0B; color: #000; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 700; cursor: pointer; }
+
+@keyframes up-slide-down {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

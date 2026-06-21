@@ -6,6 +6,7 @@ import BacklogViewMock from './BacklogViewMock';
 import SprintsViewMock from './SprintsViewMock';
 import TeamViewMock from './TeamViewMock';
 import NotificationBell from './NotificationBell';
+import UserProfile from './UserProfile';
 
 const HomePageMock = () => {
   const { projectId } = useParams();
@@ -122,10 +123,9 @@ const HomePageMock = () => {
              </button>
 
                <NotificationBell/>
+               <UserProfile />
              
-             <button className="icon-btn" title="Profile">
-               👤
-             </button>
+            
           </div>
         </header>
 

@@ -1,0 +1,83 @@
+/* --- CustomDropdown.css --- */
+
+.custom-dropdown-container {
+  position: relative;
+  display: inline-block;
+}
+
+.custom-dropdown-button {
+  fontSize: 0.7rem;
+  padding: 4px 10px;
+  background-color: var(--bg-hover, #1E293B);
+  color: var(--text-main, #F8FAFC);
+  border-radius: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid var(--border-color, #334155);
+  cursor: pointer;
+  outline: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.custom-dropdown-button:hover {
+  border-color: var(--accent-color, #F5A623);
+}
+
+.dropdown-arrow {
+  font-size: 0.5rem;
+}
+
+.custom-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 6px;
+  background-color: var(--bg-card, #0F172A);
+  border: 1px solid var(--border-color, #334155);
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+  z-index: 999;
+  min-width: 140px;
+  overflow: hidden;
+  animation: slideDown 0.15s ease-out;
+}
+
+.custom-dropdown-readonly {
+  padding: 10px 12px;
+  font-size: 0.7rem;
+  color: var(--text-muted, #64748B);
+  font-weight: bold;
+  border-bottom: 1px solid var(--border-color, #334155);
+  text-transform: uppercase;
+  cursor: not-allowed;
+}
+
+.custom-dropdown-item {
+  padding: 10px 12px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  color: var(--text-main, #F8FAFC);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.custom-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.custom-dropdown-item:hover {
+  background-color: var(--accent-color, #F5A623);
+  color: #111; /* Dark text for contrast against the accent color */
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}

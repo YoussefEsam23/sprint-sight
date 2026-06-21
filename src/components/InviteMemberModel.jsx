@@ -1,64 +1,88 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import '../styling/InviteMemberModel.css'; // <-- Import the new CSS!
+import '../styling/InviteMemberModel.css'; 
+import CustomDropdown from './CustomDropdown'; 
 
 const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
-  const [receiverId, setReceiverId] = useState('');
+  // --- NEW: Autocomplete State ---
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null); // Holds the actual user object clicked
+  
   const [intendedRole, setIntendedRole] = useState('DEVELOPER'); 
   const [status, setStatus] = useState({ type: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (!isOpen) return null;
+  const searchContainerRef = useRef(null);
 
+  // Helper to get cookies
+  const getCookie = (name) => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+  };
+
+  // --- THE DEBOUNCED SEARCH LOGIC ---
+  useEffect(() => {
+    // If they cleared the box or already picked someone, don't search
+    if (!searchQuery.trim() || selectedUser) {
+      setSearchResults([]);
+      return;
+    }
+
+    // Wait 300ms after they stop typing before asking the backend
+    const delayDebounceFn = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const token = localStorage.getItem('sprintSightToken');
+        const xsrfToken = getCookie('XSRF-TOKEN');
+
+        // Calls your new search endpoint!
+        const response = await fetch(`/api/users/search?username=${searchQuery}&projectId=${projectId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'X-XSRF-TOKEN': xsrfToken,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          // Assuming your backend sends { data: [...] } or just [...]
+          setSearchResults(data.data || data || []);
+        }
+      } catch (error) {
+        console.error("Search error:", error);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300); // 300ms delay
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, projectId, selectedUser]);
+
+
+  // --- SUBMITTING THE INVITATION ---
   const handleSendInvite = async (e) => {
     e.preventDefault();
+    
+    // Safety check
+    if (!selectedUser) {
+      setStatus({ type: 'error', message: 'Please select a user from the dropdown.' });
+      return;
+    }
+
     setIsSubmitting(true);
     setStatus({ type: '', message: '' });
-
-    const getCookie = (name) => {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop().split(';').shift();
-      return null;
-    };
 
     try {
       const token = localStorage.getItem('sprintSightToken');
       const xsrfToken = getCookie('XSRF-TOKEN');
 
-      await fetch(`api/auth/refresh` , {
-        method : 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-XSRF-TOKEN': xsrfToken
-        }
-      });
-
-      const searchResponse = await fetch(`/api/users/username/${receiverId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'X-XSRF-TOKEN': xsrfToken,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!searchResponse.ok) {
-        setStatus({ type: 'error', message: `User '${receiverId}' not found.` });
-        setIsSubmitting(false);
-        return; 
-      }
-
-      const userData = await searchResponse.json();
-      const actualUserUuid = userData.data?.id || userData.id; 
-
-      if (!actualUserUuid) {
-        setStatus({ type: 'error', message: 'User found, but UUID is missing.' });
-        setIsSubmitting(false);
-        return;
-      }
-
+      // We no longer have to search for the user here, we already have their ID!
       const inviteResponse = await fetch(`/api/projects/${projectId}/invitations`, {
         method: 'POST',
         headers: {
@@ -67,7 +91,7 @@ const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
           'X-XSRF-TOKEN': xsrfToken
         },
         body: JSON.stringify({
-          receiverId: actualUserUuid, 
+          receiverId: selectedUser.id, // Direct ID from the autocomplete!
           intendedRole: intendedRole
         })
       });
@@ -76,8 +100,13 @@ const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
 
       if (inviteResponse.ok) {
         setStatus({ type: 'success', message: 'Invitation sent successfully!' });
-        setReceiverId(''); 
-        setTimeout(() => onClose(), 2000); 
+        
+        // Reset the form and close
+        setTimeout(() => {
+          setSearchQuery('');
+          setSelectedUser(null);
+          onClose();
+        }, 2000); 
       } else {
         setStatus({ type: 'error', message: inviteData.message || 'Failed to send invite.' });
       }
@@ -90,40 +119,118 @@ const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
     }
   };
 
+  // Close search dropdown if clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+        setSearchResults([]);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  if (!isOpen) return null;
+
   return createPortal(
     <div className="modal-overlay" style={{ zIndex: 999999 }}>
       <div className="modal-content">
         <h2 className="invite-modal-header">Invite Team Member</h2>
         <p className="invite-modal-subtitle">
-          Send an invitation to collaborate on this project.
+          Search for a user to invite them to this project.
         </p>
 
         <form onSubmit={handleSendInvite} className="invite-form">
           
-          <div className="form-group">
-            <label className="invite-label">Username</label>
-            <input 
-              type="text" 
-              placeholder="e.g., youssef123" 
-              value={receiverId}
-              onChange={(e) => setReceiverId(e.target.value)}
-              required
-              className="invite-input"
-            />
+          <div className="form-group" ref={searchContainerRef}>
+            <label className="invite-label">Find User</label>
+            
+            {/* If a user is selected, show their card instead of the input box */}
+            {selectedUser ? (
+              <div className="selected-user-card">
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <div className="search-avatar-mini">
+                    {selectedUser.username.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 'bold', color: 'var(--text-main)', fontSize: '0.9rem' }}>
+                      {selectedUser.fullName || selectedUser.username}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      @{selectedUser.username}
+                    </div>
+                  </div>
+                </div>
+                <button 
+                  type="button" 
+                  className="clear-user-btn" 
+                  onClick={() => { setSelectedUser(null); setSearchQuery(''); }}
+                  title="Remove selection"
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <div className="search-dropdown-container">
+                <input 
+                  type="text" 
+                  placeholder="Type a username..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="invite-input"
+                  autoComplete="off"
+                />
+
+                {/* The Live Search Results Dropdown */}
+                {searchQuery && !selectedUser && (
+                  <div className="search-results-menu">
+                    {isSearching ? (
+                      <div style={{ padding: '10px', fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center' }}>
+                        Searching...
+                      </div>
+                    ) : searchResults.length > 0 ? (
+                      searchResults.map(user => (
+                        <div 
+                          key={user.id} 
+                          className="search-result-item"
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setSearchResults([]); // close dropdown
+                          }}
+                        >
+                          <div className="search-avatar-mini">
+                            {user.username.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 'bold', color: 'var(--text-main)', fontSize: '0.85rem' }}>
+                              {user.fullName || user.username}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                              @{user.username}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div style={{ padding: '10px', fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center' }}>
+                        No users found
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="form-group">
-            <label className="invite-label">Project Role</label>
-            <select 
-              value={intendedRole} 
-              onChange={(e) => setIntendedRole(e.target.value)}
-              className="invite-input"
-            >
-              <option value="DEVELOPER">Developer (Can edit tasks)</option>
-              <option value="SCRUM_MASTER">Scrum Master (Can manage sprints)</option>
-              <option value="PRODUCT_OWNER">Product Owner (Can manage backlog)</option>
-              <option value="VIEWER">Viewer (Read-only access)</option>
-            </select>
+            <label className="invite-label" style={{ marginBottom: '0.8rem' }}>Project Role</label>
+            <div>
+              <CustomDropdown 
+                currentValue={intendedRole}
+                options={['DEVELOPER', 'SCRUM_MASTER', 'PRODUCT_OWNER', 'VIEWER']}
+                onChange={(newRole) => setIntendedRole(newRole)}
+              />
+            </div>
           </div>
 
           {status.message && (
@@ -135,7 +242,12 @@ const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
           <div className="invite-action-group">
             <button 
               type="button" 
-              onClick={onClose} 
+              onClick={() => {
+                setSearchQuery('');
+                setSelectedUser(null);
+                setStatus({ type: '', message: '' });
+                onClose();
+              }} 
               disabled={isSubmitting}
               className="invite-cancel-btn"
             >
@@ -143,7 +255,7 @@ const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
             </button>
             <button 
               type="submit" 
-              disabled={isSubmitting}
+              disabled={isSubmitting || !selectedUser} // Disable if no user picked
               className="invite-submit-btn"
             >
               {isSubmitting ? 'Sending...' : 'Send Invite'}

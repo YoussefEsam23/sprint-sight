@@ -185,7 +185,7 @@ const BacklogViewMock = () => {
                       <span>Status: <strong style={{color: 'var(--accent-color)'}}>{story.status}</strong></span>
                       <span>Priority: <strong>{story.priority}</strong></span>
                       <span style={{background: 'var(--bg-hover)', color: 'var(--text-main)', padding: '2px 8px', borderRadius: '12px'}}>
-                        📋 {storyTaskCount} Tasks
+                         {storyTaskCount} Tasks
                       </span>
                       {story.sprintId && <span style={{background: 'var(--bg-hover)', color: 'var(--accent-color)', padding: '2px 8px', borderRadius: '12px'}}>In Sprint</span>}
                     </div>
