@@ -81,3 +81,19 @@
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* --- Dropdown Menu Items --- */
+.custom-dropdown-item {
+  padding: 10px 12px;
+  cursor: pointer;
+  color: var(--text-main);
+  transition: background-color 0.2s ease;
+  
+  /* --- THE FIX: Explicit border for both themes --- */
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* We remove the border from the very last item so it doesn't double-up with the menu's bottom border! */
+.custom-dropdown-item:last-child {
+  border-bottom: none;
+}

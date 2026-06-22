@@ -3,8 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import '../styling/HomePage.css';
 
 // --- HYBRID IMPORTS ---
-import BacklogViewMock from './BacklogViewMock';
-import SprintsViewMock from './SprintsViewMock';
+import BacklogView from './BacklogView';
+import SprintsView from './SprintsView';
 import TeamView from './TeamView'; // <-- This is now the REAL component!
 
 import NotificationBell from './NotificationBell';
@@ -151,8 +151,8 @@ const HomePage = () => {
           <div key={activeTab} className="tab-content-wrapper">
             
             {/* The Hybrid Routing Strategy */}
-            {activeTab === 'backlog' && <BacklogViewMock />}
-            {activeTab === 'sprints' && <SprintsViewMock />}
+            {activeTab === 'backlog' && <BacklogView />}
+            {activeTab === 'sprints' && <SprintsView />}
             {activeTab === 'team' && <TeamView projectId={projectId} />}
             
           </div>

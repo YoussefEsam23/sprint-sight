@@ -46,7 +46,7 @@ body {
   /* Cryptix Dark Mode Vibe */
   --bg-main: #0d1117; /* Deep almost-black space */
   --bg-sidebar: #131820; /* Slightly elevated sidebar */
-  --bg-card: rgba(22, 27, 34, 0.6); /* Translucent cards */
+  --bg-card: rgba(22, 27, 34, 1); /* Translucent cards */
   --bg-hover: rgba(255, 255, 255, 0.05);
   
   --text-main: #e6edf3;
