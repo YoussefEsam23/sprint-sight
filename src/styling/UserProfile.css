@@ -1,6 +1,3 @@
-/* Namespace: up- (User Profile) */
-
-/* --- Wrapper & Navbar Button --- */
 .up-wrapper {
   position: relative;
   display: inline-block;
@@ -36,12 +33,12 @@
   right: 0;
   margin-top: 12px;
   width: 280px;
-  background-color: #131820;
+  background-color: var(--bg-main);
   border: 1px solid var(--border-color, #334155);
   border-radius: 12px;
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
   z-index: 9999;
-  animation: up-slide-down 0.2s ease-out;
+  animation: up-slide-down 0.15s ease-out;
   overflow: hidden;
 }
 
@@ -49,15 +46,15 @@
   display: flex;
   align-items: center;
   padding: 20px;
-  border-bottom: 1px solid var(--border-color, #334155);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .up-avatar-large {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent-color, #F5A623), #fcd34d);
-  color: #111;
+  background: linear-gradient(135deg, #F5A623, #fcd34d);
+  color: var(--text-main);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -68,31 +65,36 @@
 }
 
 .up-user-info { display: flex; flex-direction: column; overflow: hidden; }
-.up-fullname { font-size: 1rem; font-weight: bold; color: #F8FAFC; margin-bottom: 2px; }
+.up-fullname { font-size: 1rem; font-weight: bold; color: var(--text-main); margin-bottom: 2px; }
 .up-email { font-size: 0.8rem; color: #94A3B8; }
 
-.up-menu-list { display: flex; flex-direction: column; padding: 10px 0; }
+.up-menu-list { display: flex; flex-direction: column; padding:  0; }
 .up-menu-btn {
   display: flex;
   align-items: center;
   width: 100%;
+  height: 100%;
   padding: 12px 20px;
   background: transparent;
   border: none;
-  color: #F8FAFC;
+  color: var(--text-main);
   font-size: 0.95rem;
   font-weight: 600;
   text-align: left;
   cursor: pointer;
+  transition: background-color 0.2s ease;
 }
-.up-menu-btn:hover { background-color: #1E293B; }
-.up-logout-btn { color: #EF4444; border-top: 1px solid #334155; margin-top: 5px; padding-top: 15px; }
+.up-menu-btn:hover { background-color: var(--bg-hover); }
+.up-logout-btn { color: #EF4444; border-top: 1px solid rgba(255, 255, 255, 0.05); margin: 0; padding-top: 15px; }
 
-/* --- Settings Modal (Scoped to prevent leaking) --- */
+/* =========================================
+   SETTINGS MODAL (Perfect Match for 133)
+   ========================================= */
+
 .up-modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.75); 
   display: flex;
   justify-content: center;
   align-items: center;
@@ -100,32 +102,138 @@
 }
 
 .up-modal-box {
-  background-color: #0F172A;
-  padding: 30px;
-  border-radius: 12px;
-  width: 420px;
-  border: 1px solid #334155;
+  background-color: var(--bg-sidebar); /* Exact slate-navy */
+  padding: 32px 36px;
+  border-radius: 14px;
+  width: 480px; 
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
   color: #F8FAFC;
 }
 
-.up-modal-box h2 { margin: 0 0 24px 0; font-size: 1.5rem; }
+.up-modal-box h2 { 
+  margin: 0 0 24px 0; 
+  font-size: 1.35rem; 
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
 
-/* Scoped inputs: ONLY styles inputs inside the modal */
-.up-modal-box .up-input-group { margin-bottom: 16px; }
-.up-modal-box label { display: block; font-size: 0.85rem; color: #94A3B8; margin-bottom: 8px; }
+/* Input layout */
+.up-input-group { 
+  margin-bottom: 18px; 
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- THE FIX: Forces side-by-side inputs --- */
+.up-input-row {
+  display: flex;
+  flex-direction: row; /* Strictly force row */
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 18px;
+  width: 100%;
+}
+
+.up-input-row .up-input-group {
+  margin-bottom: 0;
+  flex: 1 1 0; /* Forces exact 50/50 width */
+  min-width: 0; /* Prevents input overflow */
+}
+
+.up-modal-box label { 
+  font-size: 0.75rem; 
+  color: #94A3B8; 
+  margin-bottom: 6px; 
+}
+
+/* Slimmer inputs to match design */
 .up-modal-box input {
   width: 100%;
-  padding: 12px;
-  background-color: #1E293B;
-  border: 1px solid #334155;
+  box-sizing: border-box;
+  padding: 10px 12px; 
+  background-color: var(--bg-main) ;
+  border: 1px solid var(--boarder-color);
   border-radius: 6px;
-  color: #F8FAFC;
+  color: var(--text-main);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s ease;
 }
 
-.up-modal-footer { display: flex; justify-content: space-between; margin-top: 30px; }
-.up-btn-delete { background: none; border: none; color: #EF4444; font-weight: 600; cursor: pointer; }
-.up-btn-cancel { background: none; border: none; color: #94A3B8; margin-right: 15px; font-weight: 600; cursor: pointer; }
-.up-btn-save { background-color: #F59E0B; color: #000; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 700; cursor: pointer; }
+.up-modal-box input:focus { border-color: #F59E0B; }
+.up-modal-box input::placeholder { color: #475569; }
+
+/* Footer layout */
+.up-modal-footer { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center;
+  margin-top: 32px; 
+}
+
+.up-footer-right {
+  display: flex;
+  align-items: center;
+  gap: 24px; 
+}
+
+.up-btn-delete { 
+  background: none; 
+  border: none; 
+  color: #EF4444; 
+  font-weight: 700; 
+  padding: 10px 20px; 
+  border-radius: 6px; 
+  font-size: 0.9rem;
+  cursor: pointer; 
+  transition: transform 0.1s ease;
+}
+
+.up-btn-delete:hover{
+  background-color: rgb(175, 35, 35);
+  color: white;
+  transition: 0.4s;
+}
+
+.up-btn-cancel { 
+  background: none; 
+  border: none; 
+  color: #94A3B8; 
+  font-weight: 700; 
+  font-size: 0.9rem;
+  cursor: pointer; 
+  padding: 10px 20px;
+  border-radius: 6px;
+}
+
+.up-btn-cancel:hover{
+  background-color: var(--bg-hover);
+  color: var(--text-main);
+}
+
+.up-btn-save { 
+  background-color: var(--accent-color); 
+  color: var(--btn-text); 
+  border: none; 
+  padding: 10px 20px; 
+  border-radius: 8px; 
+  font-weight: 700; 
+  font-size: 0.9rem;
+  cursor: pointer; 
+  transition: transform 0.1s ease;
+}
+
+.up-btn-save:hover{
+  background-color: var(--accent-hover); box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); transform: translateY(-1px);
+}
+
+.btn-hover-effect{
+  transition: 0.3s;
+}
+
+.up-btn-save:active { transform: scale(0.97); }
 
 @keyframes up-slide-down {
   from { opacity: 0; transform: translateY(-10px); }

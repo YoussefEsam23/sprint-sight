@@ -66,7 +66,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.2rem 3rem;
+  padding: 1.3rem 3rem;
   border-bottom: 1px solid var(--border-color);
   background: transparent;
   z-index: 20;
@@ -142,25 +142,13 @@
 .header-actions { display: flex; gap: 1rem; align-items: center; }
 .search-input { padding: 10px 15px 10px 35px; border-radius: 8px; border: 1px solid var(--border-color); background-color: var(--bg-card); color: var(--text-main); width: 280px; outline: none; transition: 0.2s; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%238b949e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>'); background-repeat: no-repeat; background-position: 10px center; backdrop-filter: blur(10px);}
 .search-input:focus { border-color: var(--accent-color); }
-.new-story-btn { background-color: var(--accent-color); color: var(--btn-text); border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s;}
-.new-story-btn:hover { background-color: var(--accent-hover); box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
+.new-story-btn { background-color: var(--accent-color); color: var(--btn-text); border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all  0.2s ease;}
+.new-story-btn:hover { background-color: var(--accent-hover); box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); transform: translateY(-1px); }
 
 /* --- Premium Cards --- */
 .list-headers { display: flex; font-size: 0.8rem; color: var(--text-muted); font-weight: bold; margin-bottom: 1rem; padding: 0 1.5rem; }
 .col-id { width: 80px; }
 
-.story-list { display: flex; flex-direction: column; gap: 1rem; }
-.story-card {
-  background: var(--bg-card); border-radius: 12px; padding: 1.5rem; display: flex; align-items: center;
-  box-shadow: var(--card-shadow); border: 1px solid var(--border-color); cursor: pointer;
-  transition: transform var(--transition-bounce), border-color var(--transition-fast), box-shadow var(--transition-fast); backdrop-filter: blur(16px);
-}
-.story-card:hover { transform: translateY(-4px) scale(1.01); border-color: var(--accent-color); box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15); }
-
-.story-id { width: 70px; color: var(--text-muted); font-size: 0.9rem; font-weight: 600; }
-.story-info { flex-grow: 1; }
-.story-title { font-size: 1.1rem; color: var(--text-main); margin: 0 0 0.4rem 0; font-weight: 500; }
-.story-desc { margin: 0; color: var(--text-muted); font-size: 0.9rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 1; line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;}
 
 /* --- Modals & Dropdowns --- */
 /* --- Modals & Dropdowns --- */
@@ -316,21 +304,3 @@ select.modal-input option {
   background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>');
 }
 /* --- Outline Action Buttons (Add Issues) --- */
-.add-issues-btn {
-  background: transparent;
-  border: 1px solid var(--accent-color);
-  color: var(--accent-color);
-  padding: 6px 14px;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.add-issues-btn:hover {
-  background-color: var(--accent-color);
-  color: var(--btn-text);
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
-  transform: translateY(-1px);
-}

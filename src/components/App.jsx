@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './Login';
-import HomePage from './HomePageMock';
+import HomePage from './HomePage';
 import ProjectDashboard from './ProjectDashboard';
 import ProtectedRoute from './ProtectedRoute';
 

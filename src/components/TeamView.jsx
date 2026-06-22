@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import InviteMemberModal from './InviteMemberModel';
 import CustomDropdown from './CustomDropdown';
 
-const TeamViewMock = ({ projectId }) => {
+const TeamView = ({ projectId }) => {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [members, setMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -213,17 +213,26 @@ const TeamViewMock = ({ projectId }) => {
                   width: '45px', 
                   height: '45px', 
                   borderRadius: '50%', 
-                  background: 'linear-gradient(135deg, var(--accent-color), #fcd34d)', 
+                  background: 'linear-gradient(135deg, var(--accent-color, #F59E0B), #fcd34d)', 
                   display: 'flex', 
                   justifyContent: 'center', 
                   alignItems: 'center', 
-                  color: 'var(--btn-text)', 
+                  color: '#111', 
                   fontWeight: 'bold', 
                   fontSize: '1.2rem',
                   marginRight: '1rem',
-                  boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)'
+                  boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)',
+                  overflow: 'hidden' /* <-- CRITICAL: This forces the image to stay inside the circle */
                 }}>
-                  {username.charAt(0).toUpperCase()}
+                  {member.member?.profilePictureUrl ? (
+                    <img 
+                      src={member.member.profilePictureUrl} 
+                      alt={`${username}'s profile`} 
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                    />
+                  ) : (
+                    username.charAt(0).toUpperCase()
+                  )}
                 </div>
 
                 {/* User Details */}
@@ -298,4 +307,4 @@ const TeamViewMock = ({ projectId }) => {
   );
 };
 
-export default TeamViewMock;
+export default TeamView;

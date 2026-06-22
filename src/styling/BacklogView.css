@@ -1,0 +1,150 @@
+/* =========================================
+   BACKLOG VIEW & STORY CARDS
+   ========================================= */
+
+/* --- Back Button --- */
+.bv-back-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  transition: color 0.2s ease;
+  padding: 0;
+}
+
+.bv-back-btn:hover {
+  color: var(--accent-color);
+}
+
+/* --- Base Story List & Cards --- */
+.story-list { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 1rem; 
+}
+
+.story-card {
+  background: var(--bg-card); 
+  border-radius: 12px; 
+  padding: 1.5rem; 
+  display: flex; 
+  align-items: center;
+  box-shadow: var(--card-shadow); 
+  border: 1px solid var(--border-color); 
+  cursor: pointer;
+  transition: transform var(--transition-bounce), border-color var(--transition-fast), box-shadow var(--transition-fast); 
+  backdrop-filter: blur(16px);
+}
+
+.story-card:hover { 
+  transform: translateY(-4px) scale(1.01); 
+  border-color: var(--accent-color); 
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15); 
+}
+
+.story-id { 
+  width: 70px; 
+  color: var(--text-muted); 
+  font-size: 0.9rem; 
+  font-weight: 600; 
+}
+
+.story-info { 
+  flex-grow: 1; 
+}
+
+.story-title { 
+  font-size: 1.1rem; 
+  color: var(--text-main); 
+  margin: 0 0 0.4rem 0; 
+  font-weight: 500; 
+}
+
+.story-desc { 
+  margin: 0; 
+  color: var(--text-muted); 
+  font-size: 0.9rem; 
+  line-height: 1.4; 
+  display: -webkit-box; 
+  -webkit-line-clamp: 1; 
+  line-clamp: 1; 
+  -webkit-box-orient: vertical; 
+  overflow: hidden;
+}
+
+/* --- Story & Task Meta Information (Tags) --- */
+.bv-story-meta {
+  margin-top: 0.8rem;
+  display: flex;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.bv-badge {
+  background: var(--bg-hover);
+  color: var(--text-main);
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.bv-badge-highlight {
+  background: var(--bg-hover);
+  color: var(--accent-color);
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.bv-task-creator {
+  margin-top: 0.8rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* --- Empty States --- */
+.bv-empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: var(--bg-card);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.bv-empty-state-dashed {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: var(--bg-card);
+  border-radius: 12px;
+  border: 1px dashed var(--border-color);
+}
+
+.bv-empty-state h2, 
+.bv-empty-state-dashed h2 {
+  color: var(--text-main);
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 1.4rem;
+}
+
+.bv-empty-state p, 
+.bv-empty-state-dashed p {
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* --- Form Errors --- */
+.bv-form-error {
+  color: #e74c3c;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-top: 6px;
+  display: block;
+}

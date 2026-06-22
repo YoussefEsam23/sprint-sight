@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import '../styling/SprintsView.css'; // <-- NEW IMPORT
 
 const getLocalSprintsDB = () => {
   const saved = localStorage.getItem('sprintSightMockSprints');
@@ -90,51 +91,61 @@ const SprintsViewMock = () => {
 
   return (
     <>
-      <div className="content-left" style={{ maxWidth: '100%' }}>
+      <div className="content-left">
         <div className="page-header">
-          <div><p className="page-subtitle">SPRINTS OVERVIEW</p><h1 className="page-title">Active Sprints</h1></div>
-          <div className="header-actions"><button className="new-story-btn" onClick={() => openModal()}>+ CREATE SPRINT</button></div>
+          <div>
+            <p className="page-subtitle">SPRINTS OVERVIEW</p>
+            <h1 className="page-title">Active Sprints</h1>
+          </div>
+          <div className="header-actions">
+            <button className="new-story-btn" onClick={() => openModal()}>+ CREATE SPRINT</button>
+          </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <div className="sv-container">
           {sprints.map(sprint => {
             const sprintStories = allStories.filter(story => story.sprintId === sprint.id);
             return (
-              <div key={sprint.id} style={{ background: 'var(--bg-card)', borderRadius: '12px', padding: '1.5rem', boxShadow: 'var(--card-shadow)', border: '1px solid var(--border-color)', position: 'relative', zIndex: openMenuId === sprint.id ? 50 : 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
+              // zIndex remains inline because it is a dynamic JS value
+              <div key={sprint.id} className="sv-sprint-card" style={{ zIndex: openMenuId === sprint.id ? 50 : 1 }}>
+                
+                <div className="sv-header">
                   <div>
-                    <h2 style={{ color: 'var(--text-main)', fontSize: '1.4rem', margin: '0 0 0.3rem 0' }}>{sprint.name}</h2>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0, fontWeight: '600' }}>{sprint.startDate} &nbsp;→&nbsp; {sprint.endDate}</p>
+                    <h2 className="sv-title">{sprint.name}</h2>
+                    <p className="sv-dates">{sprint.startDate} &nbsp;→&nbsp; {sprint.endDate}</p>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                   <button onClick={() => openAddStoryModal(sprint.id)} className="add-issues-btn">+ Add Issues</button>
+                  <div className="sv-actions">
+                   <button onClick={() => openAddStoryModal(sprint.id)} className="sv-add-issues-btn">+ Add Issues</button>
+                    
                     <div className="menu-container">
                       <button className="options-btn" onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === sprint.id ? null : sprint.id); }}>⋮</button>
+                      
                       {openMenuId === sprint.id && (
-                        <div className="dropdown-menu" style={{top: '100%', right: '0'}}>
-                          <button className="dropdown-item" onClick={() => openModal(sprint)}>✏️ Edit Sprint</button>
-                          <button className="dropdown-item" style={{color: '#e74c3c'}} onClick={() => handleDeleteSprint(sprint.id)}>🗑️ Delete Sprint</button>
+                        <div className="dropdown-menu sv-dropdown-menu">
+                          <button className="dropdown-item" onClick={() => openModal(sprint)}>Edit Sprint</button>
+                          <button className="dropdown-item" style={{color: '#e74c3c'}} onClick={() => handleDeleteSprint(sprint.id)}>Delete Sprint</button>
                         </div>
                       )}
                     </div>
+
                   </div>
                 </div>
 
-                <div style={{ minHeight: '100px', background: 'var(--bg-main)', borderRadius: '8px', padding: '1rem', border: '1px dashed var(--border-color)' }}>
+                <div className="sv-body">
                   {sprintStories.length > 0 ? (
-                    <div className="story-list" style={{ gap: '0.8rem' }}>
+                    <div className="sv-story-list">
                       {sprintStories.map(story => (
-                        <div key={story.id} className="story-card" style={{ padding: '1rem', borderLeft: '4px solid var(--accent-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div key={story.id} className="sv-story-item">
                           <div>
-                            <div className="story-id">#{story.id}</div>
-                            <h3 className="story-title" style={{ fontSize: '1.1rem', margin: '0.2rem 0' }}>{story.title}</h3>
+                            <div className="sv-story-id">#{story.id}</div>
+                            <h3 className="sv-story-title">{story.title}</h3>
                           </div>
-                          <button onClick={() => handleRemoveStoryFromSprint(story.id)} style={{ background: 'none', border: 'none', color: '#e74c3c', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>✕ Remove</button>
+                          <button onClick={() => handleRemoveStoryFromSprint(story.id)} className="sv-remove-btn">✕ Remove</button>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem 0' }}>Sprint is empty.</div>
+                    <div className="sv-empty-text">Sprint is empty.</div>
                   )}
                 </div>
               </div>
@@ -164,19 +175,24 @@ const SprintsViewMock = () => {
           <div className="modal-content" style={{maxWidth: '600px'}}>
             <h2 className="modal-title">Pull Issues from Backlog</h2>
             <form className="modal-form" onSubmit={handleSaveAssignedStories}>
-              <div style={{ maxHeight: '300px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+              
+              <div className="sv-pull-list">
                 {unassignedStories.length > 0 ? (
                   unassignedStories.map(story => (
-                    <label key={story.id} style={{ display: 'flex', gap: '1rem', padding: '1rem', background: 'var(--bg-main)', borderRadius: '8px', cursor: 'pointer', border: selectedStoryIds.includes(story.id) ? '2px solid var(--accent-color)' : '2px solid transparent' }}>
+                    <label key={story.id} className={`sv-pull-item ${selectedStoryIds.includes(story.id) ? 'selected' : ''}`}>
                       <input type="checkbox" checked={selectedStoryIds.includes(story.id)} onChange={() => toggleStorySelection(story.id)} />
-                      <div><strong style={{color: 'var(--text-main)'}}>{story.title}</strong></div>
+                      <div className="sv-pull-item-title">{story.title}</div>
                     </label>
                   ))
                 ) : (
                   <p style={{textAlign: 'center', color: 'var(--text-muted)'}}>No unassigned stories!</p>
                 )}
               </div>
-              <div className="modal-actions"><button type="button" className="modal-btn cancel-btn" onClick={() => setIsAddStoryModalOpen(false)}>Cancel</button><button type="submit" className="modal-btn save-btn">Add Issues</button></div>
+
+              <div className="modal-actions">
+                <button type="button" className="modal-btn cancel-btn" onClick={() => setIsAddStoryModalOpen(false)}>Cancel</button>
+                <button type="submit" className="modal-btn save-btn">Add Issues</button>
+              </div>
             </form>
           </div>
         </div>
@@ -184,4 +200,5 @@ const SprintsViewMock = () => {
     </>
   );
 };
+
 export default SprintsViewMock;

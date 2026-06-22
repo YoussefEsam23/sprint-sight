@@ -1,0 +1,215 @@
+/* =========================================
+   SPRINTS VIEW & SPRINT BOARDS
+   ========================================= */
+
+.sv-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* --- Sprint Card Wrapper --- */
+.sv-sprint-card {
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border-color);
+  position: relative;
+  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* --- Sprint Header --- */
+.sv-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1rem;
+}
+
+.sv-title {
+  color: var(--text-main);
+  font-size: 1.4rem;
+  margin: 0 0 0.3rem 0;
+}
+
+.sv-dates {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.sv-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Dropdown specific position for sprints */
+.sv-dropdown-menu {
+  top: 100%;
+  right: 0;
+}
+
+/* --- Add Issues Button --- */
+.sv-add-issues-btn {
+  background: transparent;
+  border: 1px solid var(--accent-color);
+  color: var(--accent-color);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sv-add-issues-btn:hover {
+  background-color: var(--accent-color);
+  color: var(--btn-text);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+  transform: translateY(-1px);
+}
+
+/* --- Sprint Body (The dropzone area) --- */
+.sv-body {
+  min-height: 100px;
+  background: var(--bg-main);
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px dashed var(--border-color);
+}
+
+.sv-empty-text {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 2rem 0;
+  font-weight: 500;
+}
+
+/* --- Sprint Story Item (Mini version of story card) --- */
+.sv-story-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.sv-story-id {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.sv-story-title {
+  font-size: 1.1rem;
+  margin: 0.2rem 0 0 0;
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+.sv-remove-btn {
+  background: none;
+  border: none;
+  color: #e74c3c;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: opacity 0.2s ease;
+}
+
+.sv-remove-btn:hover {
+  opacity: 0.7;
+  text-decoration: underline;
+}
+
+/* --- Pull Issues Modal List --- */
+.sv-pull-list {
+  max-height: 300px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding-right: 6px;
+}
+
+.sv-pull-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--bg-main);
+  border-radius: 8px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.sv-pull-item:hover {
+  background: var(--bg-hover);
+}
+
+.sv-pull-item.selected {
+  border-color: var(--accent-color);
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.sv-pull-item-title {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.add-issues-btn {
+  background: transparent;
+  border: 1px solid var(--accent-color);
+  color: var(--accent-color);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-issues-btn:hover {
+  background-color: var(--accent-color);
+  color: var(--btn-text);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+  transform: translateY(-1px);
+}
+
+.sv-story-item {
+  background: var(--bg-card);
+  padding: 1rem 1.2rem;
+  border-left: 4px solid var(--accent-color);
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-top: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* --- ADD THIS NEW BLOCK FOR THE HOVER EFFECT --- */
+.sv-story-item:hover {
+  transform: translateY(-4px) scale(1.01);
+  border-top-color: var(--accent-color);
+  border-right-color: var(--accent-color);
+  border-bottom-color: var(--accent-color);
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15);
+}
+
+.sv-sprint-card:hover{
+      transform: translateY(-4px) scale(1.01);
+  border-top-color: var(--accent-color);
+  border-right-color: var(--accent-color);
+  border-bottom-color: var(--accent-color);
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15);
+}

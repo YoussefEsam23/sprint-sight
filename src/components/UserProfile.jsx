@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import '../styling/UserProfile.css'; 
+import UserProfilePicture from './UserProfilePicture'; 
 
 const UserProfile = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -9,13 +10,14 @@ const UserProfile = () => {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
-  // Load user from localStorage
-  const storedUserString = localStorage.getItem('sprintSightUser');
-  const user = storedUserString ? JSON.parse(storedUserString) : null;
+  // --- STATE: Make user a state variable so the navbar updates instantly ---
+  const [user, setUser] = useState(() => {
+    const stored = localStorage.getItem('sprintSightUser');
+    return stored ? JSON.parse(stored) : null;
+  });
   
   const initial = user?.username ? user.username.charAt(0).toUpperCase() : 'U';
 
-  // --- MODAL FORM STATE ---
   const [formData, setFormData] = useState({
     fullName: user?.fullName || '',
     email: user?.email || '',
@@ -40,7 +42,6 @@ const UserProfile = () => {
     return null;
   };
 
-  // --- API: UPDATE USER ---
   const handleSaveSettings = async () => {
     try {
       const response = await fetch(`/api/users/${user.id}`, {
@@ -60,7 +61,9 @@ const UserProfile = () => {
 
       if (response.ok) {
         alert("Profile updated successfully!");
-        localStorage.setItem('sprintSightUser', JSON.stringify({ ...user, ...formData }));
+        const updatedUser = { ...user, ...formData };
+        localStorage.setItem('sprintSightUser', JSON.stringify(updatedUser));
+        setUser(updatedUser); // Update local state
         setIsSettingsModalOpen(false);
       } else {
         alert("Failed to update profile.");
@@ -70,7 +73,6 @@ const UserProfile = () => {
     }
   };
 
-  // --- API: DELETE ACCOUNT ---
   const handleDeleteAccount = async () => {
     if (!window.confirm("Are you sure? This cannot be undone!")) return;
     
@@ -103,12 +105,33 @@ const UserProfile = () => {
 
   return (
     <div className="up-wrapper" ref={dropdownRef}>
-      <button className="up-nav-btn" onClick={() => setIsOpen(!isOpen)}>{initial}</button>
+      
+      {/* --- NAVBAR AVATAR (Small Circle) --- */}
+      <button 
+        className="up-nav-btn" 
+        onClick={() => setIsOpen(!isOpen)}
+        style={{ padding: user?.imageUrl ? 0 : '', overflow: 'hidden' }}
+      >
+        {user?.imageUrl ? (
+          <img src={user.imageUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        ) : (
+          initial
+        )}
+      </button>
 
       {isOpen && (
         <div className="up-menu">
           <div className="up-menu-header">
-            <div className="up-avatar-large">{initial}</div>
+            
+            {/* --- DROPDOWN AVATAR (Large Circle) --- */}
+            <div className="up-avatar-large" style={{ overflow: 'hidden' }}>
+              {user?.imageUrl ? (
+                <img src={user.imageUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                initial
+              )}
+            </div>
+
             <div className="up-user-info">
               <span className="up-fullname">{user?.fullName}</span>
               <span className="up-email">{user?.email}</span>
@@ -116,20 +139,33 @@ const UserProfile = () => {
           </div>
           <div className="up-menu-list">
             <button className="up-menu-btn" onClick={() => { setIsOpen(false); setIsSettingsModalOpen(true); }}>
-              ⚙️ Account Settings
+               Account Settings
             </button>
             <button className="up-menu-btn up-logout-btn" onClick={handleLogout}>
-              🚪 Logout
+              Logout
             </button>
           </div>
         </div>
       )}
 
-      {/* --- ACCOUNT SETTINGS MODAL --- */}
       {isSettingsModalOpen && createPortal(
         <div className="up-modal-overlay">
           <div className="up-modal-box">
             <h2>Account Settings</h2>
+
+            {/* --- PICTURE UPLOADER --- */}
+            <UserProfilePicture 
+              user={user} 
+              onPictureUpdate={(updatedUser) => {
+                setFormData({
+                  ...formData,
+                  fullName: updatedUser.fullName,
+                  email: updatedUser.email,
+                  username: updatedUser.username
+                });
+                setUser(updatedUser); // Instantly updates navbar and dropdown
+              }} 
+            />
             
             <div className="up-input-group">
               <label>Full Name</label>
@@ -141,23 +177,27 @@ const UserProfile = () => {
               <input value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
             </div>
 
-            <div className="up-input-group">
-              <label>Username</label>
-              <input value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} />
-            </div>
+            <div className="up-input-row">
+              <div className="up-input-group">
+                <label>Username</label>
+                <input value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} />
+              </div>
 
-            <div className="up-input-group">
-              <label>New Password</label>
-              <input type="password" placeholder="Leave blank to keep" onChange={e => setFormData({...formData, password: e.target.value})} />
+              <div className="up-input-group">
+                <label>New Password</label>
+                <input type="password" placeholder="Leave blank to keep" onChange={e => setFormData({...formData, password: e.target.value})} />
+              </div>
             </div>
             
             <div className="up-modal-footer">
-              <button className="up-btn-delete" onClick={handleDeleteAccount}>Delete Account</button>
-              <div>
-                <button className="up-btn-cancel" onClick={() => setIsSettingsModalOpen(false)}>Cancel</button>
-                <button className="up-btn-save" onClick={handleSaveSettings}>Save Changes</button>
+              <button className="up-btn-delete btn-hover-effect" onClick={handleDeleteAccount}>Delete Account</button>
+              
+              <div className="up-footer-right">
+                <button className="up-btn-cancel btn-hover-effect" onClick={() => setIsSettingsModalOpen(false)}>Cancel</button>
+                <button className="up-btn-save btn-hover-effect" onClick={handleSaveSettings}>Save Changes</button>
               </div>
             </div>
+
           </div>
         </div>,
         document.body

@@ -4,11 +4,10 @@ import '../styling/InviteMemberModel.css';
 import CustomDropdown from './CustomDropdown'; 
 
 const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
-  // --- NEW: Autocomplete State ---
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null); // Holds the actual user object clicked
+  const [selectedUser, setSelectedUser] = useState(null); 
   
   const [intendedRole, setIntendedRole] = useState('DEVELOPER'); 
   const [status, setStatus] = useState({ type: '', message: '' });
@@ -16,7 +15,6 @@ const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
 
   const searchContainerRef = useRef(null);
 
-  // Helper to get cookies
   const getCookie = (name) => {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
@@ -24,22 +22,18 @@ const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
     return null;
   };
 
-  // --- THE DEBOUNCED SEARCH LOGIC ---
   useEffect(() => {
-    // If they cleared the box or already picked someone, don't search
     if (!searchQuery.trim() || selectedUser) {
       setSearchResults([]);
       return;
     }
 
-    // Wait 300ms after they stop typing before asking the backend
     const delayDebounceFn = setTimeout(async () => {
       setIsSearching(true);
       try {
         const token = localStorage.getItem('sprintSightToken');
         const xsrfToken = getCookie('XSRF-TOKEN');
 
-        // Calls your new search endpoint!
         const response = await fetch(`/api/users/search?username=${searchQuery}&projectId=${projectId}`, {
           method: 'GET',
           headers: {
@@ -51,7 +45,6 @@ const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
 
         if (response.ok) {
           const data = await response.json();
-          // Assuming your backend sends { data: [...] } or just [...]
           setSearchResults(data.data || data || []);
         }
       } catch (error) {
@@ -59,17 +52,15 @@ const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
       } finally {
         setIsSearching(false);
       }
-    }, 300); // 300ms delay
+    }, 300);
 
     return () => clearTimeout(delayDebounceFn);
   }, [searchQuery, projectId, selectedUser]);
 
 
-  // --- SUBMITTING THE INVITATION ---
   const handleSendInvite = async (e) => {
     e.preventDefault();
     
-    // Safety check
     if (!selectedUser) {
       setStatus({ type: 'error', message: 'Please select a user from the dropdown.' });
       return;
@@ -82,7 +73,6 @@ const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
       const token = localStorage.getItem('sprintSightToken');
       const xsrfToken = getCookie('XSRF-TOKEN');
 
-      // We no longer have to search for the user here, we already have their ID!
       const inviteResponse = await fetch(`/api/projects/${projectId}/invitations`, {
         method: 'POST',
         headers: {
@@ -91,7 +81,7 @@ const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
           'X-XSRF-TOKEN': xsrfToken
         },
         body: JSON.stringify({
-          receiverId: selectedUser.id, // Direct ID from the autocomplete!
+          receiverId: selectedUser.id, 
           intendedRole: intendedRole
         })
       });
@@ -101,7 +91,6 @@ const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
       if (inviteResponse.ok) {
         setStatus({ type: 'success', message: 'Invitation sent successfully!' });
         
-        // Reset the form and close
         setTimeout(() => {
           setSearchQuery('');
           setSelectedUser(null);
@@ -119,7 +108,6 @@ const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
     }
   };
 
-  // Close search dropdown if clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
@@ -145,13 +133,20 @@ const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
           <div className="form-group" ref={searchContainerRef}>
             <label className="invite-label">Find User</label>
             
-            {/* If a user is selected, show their card instead of the input box */}
+            {/* --- 1. SELECTED USER CARD --- */}
             {selectedUser ? (
               <div className="selected-user-card">
                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <div className="search-avatar-mini">
-                    {selectedUser.username.charAt(0).toUpperCase()}
+                  
+                  {/* Selected User Avatar */}
+                  <div className="search-avatar-mini" style={{ overflow: 'hidden', padding: selectedUser.profilePictureUrl ? 0 : '' }}>
+                    {selectedUser.profilePictureUrl ? (
+                      <img src={selectedUser.profilePictureUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      selectedUser.username.charAt(0).toUpperCase()
+                    )}
                   </div>
+
                   <div>
                     <div style={{ fontWeight: 'bold', color: 'var(--text-main)', fontSize: '0.9rem' }}>
                       {selectedUser.fullName || selectedUser.username}
@@ -181,7 +176,7 @@ const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
                   autoComplete="off"
                 />
 
-                {/* The Live Search Results Dropdown */}
+                {/* --- 2. LIVE SEARCH RESULTS DROPDOWN --- */}
                 {searchQuery && !selectedUser && (
                   <div className="search-results-menu">
                     {isSearching ? (
@@ -195,12 +190,18 @@ const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
                           className="search-result-item"
                           onClick={() => {
                             setSelectedUser(user);
-                            setSearchResults([]); // close dropdown
+                            setSearchResults([]); 
                           }}
                         >
-                          <div className="search-avatar-mini">
-                            {user.username.charAt(0).toUpperCase()}
+                          {/* Search Result Avatar */}
+                          <div className="search-avatar-mini" style={{ overflow: 'hidden', padding: user.profilePictureUrl ? 0 : '' }}>
+                            {user.profilePictureUrl ? (
+                              <img src={user.profilePictureUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                              user.username.charAt(0).toUpperCase()
+                            )}
                           </div>
+
                           <div>
                             <div style={{ fontWeight: 'bold', color: 'var(--text-main)', fontSize: '0.85rem' }}>
                               {user.fullName || user.username}
@@ -255,7 +256,7 @@ const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
             </button>
             <button 
               type="submit" 
-              disabled={isSubmitting || !selectedUser} // Disable if no user picked
+              disabled={isSubmitting || !selectedUser}
               className="invite-submit-btn"
             >
               {isSubmitting ? 'Sending...' : 'Send Invite'}
