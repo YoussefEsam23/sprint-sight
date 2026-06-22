@@ -10,13 +10,15 @@ const UserProfile = () => {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
-  // --- STATE: Make user a state variable so the navbar updates instantly ---
   const [user, setUser] = useState(() => {
     const stored = localStorage.getItem('sprintSightUser');
     return stored ? JSON.parse(stored) : null;
   });
   
   const initial = user?.username ? user.username.charAt(0).toUpperCase() : 'U';
+  
+  // --- THE FIX: Look for either key from the backend! ---
+  const userImage = user?.profilePictureUrl || user?.imageUrl;
 
   const [formData, setFormData] = useState({
     fullName: user?.fullName || '',
@@ -63,7 +65,7 @@ const UserProfile = () => {
         alert("Profile updated successfully!");
         const updatedUser = { ...user, ...formData };
         localStorage.setItem('sprintSightUser', JSON.stringify(updatedUser));
-        setUser(updatedUser); // Update local state
+        setUser(updatedUser); 
         setIsSettingsModalOpen(false);
       } else {
         alert("Failed to update profile.");
@@ -75,7 +77,6 @@ const UserProfile = () => {
 
   const handleDeleteAccount = async () => {
     if (!window.confirm("Are you sure? This cannot be undone!")) return;
-    
     try {
       await fetch(`/api/users/${user.id}`, {
         method: 'DELETE',
@@ -106,14 +107,14 @@ const UserProfile = () => {
   return (
     <div className="up-wrapper" ref={dropdownRef}>
       
-      {/* --- NAVBAR AVATAR (Small Circle) --- */}
+      {/* --- NAVBAR AVATAR --- */}
       <button 
         className="up-nav-btn" 
         onClick={() => setIsOpen(!isOpen)}
-        style={{ padding: user?.imageUrl ? 0 : '', overflow: 'hidden' }}
+        style={{ padding: userImage ? 0 : '', overflow: 'hidden' }}
       >
-        {user?.imageUrl ? (
-          <img src={user.imageUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        {userImage ? (
+          <img src={userImage} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
           initial
         )}
@@ -123,10 +124,10 @@ const UserProfile = () => {
         <div className="up-menu">
           <div className="up-menu-header">
             
-            {/* --- DROPDOWN AVATAR (Large Circle) --- */}
+            {/* --- DROPDOWN AVATAR --- */}
             <div className="up-avatar-large" style={{ overflow: 'hidden' }}>
-              {user?.imageUrl ? (
-                <img src={user.imageUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              {userImage ? (
+                <img src={userImage} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
                 initial
               )}
@@ -139,10 +140,10 @@ const UserProfile = () => {
           </div>
           <div className="up-menu-list">
             <button className="up-menu-btn" onClick={() => { setIsOpen(false); setIsSettingsModalOpen(true); }}>
-               Account Settings
+              ⚙️ Account Settings
             </button>
             <button className="up-menu-btn up-logout-btn" onClick={handleLogout}>
-              Logout
+              🚪 Logout
             </button>
           </div>
         </div>
@@ -153,7 +154,6 @@ const UserProfile = () => {
           <div className="up-modal-box">
             <h2>Account Settings</h2>
 
-            {/* --- PICTURE UPLOADER --- */}
             <UserProfilePicture 
               user={user} 
               onPictureUpdate={(updatedUser) => {
@@ -163,7 +163,7 @@ const UserProfile = () => {
                   email: updatedUser.email,
                   username: updatedUser.username
                 });
-                setUser(updatedUser); // Instantly updates navbar and dropdown
+                setUser(updatedUser); 
               }} 
             />
             
