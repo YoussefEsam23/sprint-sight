@@ -21,8 +21,10 @@ body {
 :root {
   /* --- PREMIUM THEME PALETTES (Dark Blue & Yellow Accent) --- */
   --bg-main: #f3f4f6;
+  --bg-main-login: rgba(243, 244, 246 , 0.2);
   --bg-sidebar: #ffffff;
   --bg-card: #ffffff;
+  --bg-card-login: rgba(255, 255, 255 , 0.2);
   --bg-hover: #e5e7eb;
   
   --text-main: #111827;
@@ -44,9 +46,11 @@ body {
 
 [data-theme="dark"] {
   /* Cryptix Dark Mode Vibe */
-  --bg-main: #0d1117; /* Deep almost-black space */
+  --bg-main: rgb(13, 17, 23); /* Deep almost-black space */
+  --bg-main-login: rgba(13, 17, 23,0.2);
   --bg-sidebar: #131820; /* Slightly elevated sidebar */
-  --bg-card: rgba(22, 27, 34, 1); /* Translucent cards */
+  --bg-card: rgb(22, 27, 34); /* Translucent cards */
+  --bg-card-login:rgba(22, 27, 34,0.2);
   --bg-hover: rgba(255, 255, 255, 0.05);
   
   --text-main: #e6edf3;

@@ -92,13 +92,12 @@
    ========================================= */
 
 .up-modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.75); 
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 99999;
+   position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+  background-color: rgba(0, 0, 0, 0.65); 
+  display: flex; justify-content: center; align-items: center; 
+  z-index: 999999; /* Guarantees it overlays everything */
+  backdrop-filter: blur(8px); 
+  animation: bvFadeInOverlay 0.2s ease-out;
 }
 
 .up-modal-box {
@@ -180,9 +179,9 @@
 }
 
 .up-btn-delete { 
-  background: none; 
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
   border: none; 
-  color: #EF4444; 
   font-weight: 700; 
   padding: 10px 20px; 
   border-radius: 6px; 
@@ -192,7 +191,7 @@
 }
 
 .up-btn-delete:hover{
-  background-color: rgb(175, 35, 35);
+  background-color:#ef4444;
   color: white;
   transition: 0.4s;
 }

@@ -121,7 +121,7 @@ const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="modal-overlay" style={{ zIndex: 999999 }}>
+    <div className="modal-overlay" style={{ zIndex: 999999 }} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="modal-content">
         <h2 className="invite-modal-header">Invite Team Member</h2>
         <p className="invite-modal-subtitle">

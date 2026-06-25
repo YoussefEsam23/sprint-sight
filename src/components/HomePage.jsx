@@ -5,7 +5,8 @@ import '../styling/HomePage.css';
 // --- HYBRID IMPORTS ---
 import BacklogView from './BacklogView';
 import SprintsView from './SprintsView';
-import TeamView from './TeamView'; // <-- This is now the REAL component!
+import TeamView from './TeamView'; 
+import ComponentsView from './ComponentsView'; // <-- NEW IMPORT
 
 import NotificationBell from './NotificationBell';
 import UserProfile from './UserProfile';
@@ -93,6 +94,7 @@ const HomePage = () => {
   const getBreadcrumbTitle = () => {
     if (activeTab === 'backlog') return 'Main Dashboard';
     if (activeTab === 'sprints') return 'Active Sprints';
+    if (activeTab === 'components') return 'Project Components'; // <-- NEW BREADCRUMB
     if (activeTab === 'team') return 'Team Management';
     return '';
   };
@@ -113,11 +115,17 @@ const HomePage = () => {
               <li><button className={`nav-item ${activeTab === 'backlog' ? 'active' : ''}`} onClick={() => setActiveTab('backlog')}><span className="icon">☰</span> Dashboard</button></li>
               <li><button className={`nav-item ${activeTab === 'sprints' ? 'active' : ''}`} onClick={() => setActiveTab('sprints')}><span className="icon">⚏</span> Active Sprints</button></li>
               <li className="nav-divider"></li>
-              <li><button className="nav-item"><span className="icon"></span> Market Issues</button></li>
-              <li><button className="nav-item"><span className="icon"></span> Assets Wiki</button></li>
+              
+              {/* --- NEW COMPONENTS BUTTON --- */}
+              <li>
+                <button className={`nav-item ${activeTab === 'components' ? 'active' : ''}`} onClick={() => setActiveTab('components')}>
+                  Components
+                </button>
+              </li>
+
               <li>
                 <button className={`nav-item ${activeTab === 'team' ? 'active' : ''}`} onClick={() => setActiveTab('team')}>
-                  <span className="icon"></span> Team
+                 Team
                 </button>
               </li>
             </ul>
@@ -153,6 +161,7 @@ const HomePage = () => {
             {/* The Hybrid Routing Strategy */}
             {activeTab === 'backlog' && <BacklogView />}
             {activeTab === 'sprints' && <SprintsView />}
+            {activeTab === 'components' && <ComponentsView />} {/* <-- NEW VIEW RENDER */}
             {activeTab === 'team' && <TeamView projectId={projectId} />}
             
           </div>

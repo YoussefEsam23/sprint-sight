@@ -1,0 +1,248 @@
+/* =========================================
+   TEAM VIEW (tv-)
+   ========================================= */
+
+.tv-container {
+  flex-grow: 1; 
+  width: 100%; 
+  z-index: 1; 
+}
+
+/* --- Header --- */
+.tv-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.tv-title {
+  font-size: 1.8rem;
+  color: var(--text-main);
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+
+.tv-invite-btn {
+  background-color: var(--accent-color);
+  color: var(--btn-text);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+}
+
+.tv-invite-btn:hover {
+  background-color: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.tv-loading {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+/* --- Team Grid --- */
+.tv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.2rem;
+}
+
+/* Updated to look clickable */
+.tv-card {
+  background-color: var(--bg-card);
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+  cursor: pointer;
+}
+
+.tv-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent-color);
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15);
+}
+
+/* --- Avatar --- */
+.tv-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  overflow: hidden;
+  background-color: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.tv-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* --- Member Info --- */
+.tv-info {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tv-name {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.tv-username {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* --- Actions & Roles --- */
+.tv-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.tv-role-badge {
+  font-size: 0.75rem;
+  padding: 6px 12px;
+  background-color: rgba(255, 255, 255, 0.05); 
+  color: var(--accent-color);
+  border: 1px solid var(--accent-color);
+  border-radius: 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+
+/* =========================================
+   NEW: EDIT MEMBER MODAL
+   ========================================= */
+.tv-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 99999;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.tv-modal-content {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 2rem;
+  width: 90%; 
+  max-width: 450px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  animation: slideUp 0.2s ease-out;
+}
+
+.tv-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tv-modal-avatar {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  display: flex; justify-content: center; align-items: center;
+  font-size: 1.5rem; font-weight: bold;
+  background: var(--bg-hover);
+  color: var(--text-main);
+}
+
+.tv-modal-info h3 { margin: 0; font-size: 1.3rem; color: var(--text-main); }
+.tv-modal-info p { margin: 0; font-size: 0.9rem; color: var(--text-muted); }
+
+.tv-modal-form-group {
+  margin-bottom: 1.5rem;
+}
+
+.tv-modal-form-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.tv-modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.tv-modal-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.tv-btn-cancel {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+}
+.tv-btn-cancel:hover {
+  background: var(--bg-hover);
+  color: var(--text-main);
+}
+
+.tv-btn-save {
+  background: var(--accent-color);
+  color: var(--btn-text);
+  margin-left: auto; /* Pushes save button to the right */
+}
+.tv-btn-save:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.tv-btn-remove {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+.tv-btn-remove:hover {
+  background: #ef4444;
+  color: white;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }

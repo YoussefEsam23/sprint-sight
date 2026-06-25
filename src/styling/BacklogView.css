@@ -75,8 +75,9 @@
 
 /* --- Base Story List & Cards --- */
 .story-list { 
-  display: flex; 
-  flex-direction: column; 
+   display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Creates exactly 2 equal columns */
+  gap: 16px; 
   gap: 1rem; 
 }
 
@@ -233,12 +234,14 @@
 .bv-modal-content { 
   background-color: var(--bg-sidebar); 
   color: var(--text-main); 
-  width: 90%; max-width: 480px; 
+  width: 90%; max-width: 880px; 
   border-radius: 20px; 
-  padding: 2.5rem; 
+  padding: 1.5rem; 
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
   border: 1px solid var(--border-color); 
   animation: bvSlideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+  
 }
 
 @keyframes bvSlideUpModal {
@@ -261,9 +264,11 @@
   gap: 1.4rem; 
 }
 
-.bv-form-group { display: flex; 
+.bv-form-group { 
+  display: flex; 
   flex-direction: column; 
-  gap: 0.5rem; 
+  gap: 0.35rem; 
+  margin-bottom: 15px;
 }
 
 .bv-form-row { 
@@ -328,7 +333,7 @@ select.bv-modal-input option {
   display: flex; 
   justify-content: flex-end; 
   gap: 1rem; 
-  margin-top: 1rem; 
+  margin-top: auto; 
   padding-top: 1.5rem;
   border-top: 1px solid var(--border-color); 
   }
@@ -363,4 +368,68 @@ select.bv-modal-input option {
   background-color: var(--accent-hover); 
   transform: translateY(-1px); 
   box-shadow: 0 6px 16px rgba(245, 158, 11, 0.3); 
+}
+
+/* =========================================
+   NEW: VIEW ISSUE DETAILS MODAL (Two-Column)
+   ========================================= */
+.bv-view-modal {
+  background-color: var(--bg-sidebar); 
+  color: var(--text-main); 
+  width: 95%; 
+  max-width: 1050px; /* Wide enough to fit both columns comfortably */
+  border-radius: 20px; 
+  padding: 2.5rem; 
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
+  border: 1px solid var(--border-color); 
+  animation: bvSlideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: grid;
+  grid-template-columns: 1.3fr 1fr; /* Left side is slightly wider */
+  gap: 2.5rem;
+  max-height: 90vh;
+}
+
+.bv-view-left {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto; /* Allows left side to scroll if description is huge */
+  padding-right: 15px;
+}
+
+.bv-view-right {
+  background-color: var(--bg-main);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid var(--border-color);
+  overflow-y: auto; /* Allows comments to scroll independently */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Responsive: Stack them vertically on smaller laptop/tablet screens */
+@media (max-width: 900px) {
+  .bv-view-modal {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
+}
+
+.bv-text-input-container{
+  display: flex;
+  flex-direction: column;
+  margin: 15px;
+  width: 50%;
+}
+
+.bv-select-input-container{
+  display: flex;
+  flex-direction: column;
+  margin: 15px;
+  width: 50%;
+}
+
+.bv-inputs-container{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
 }

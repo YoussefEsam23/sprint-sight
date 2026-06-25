@@ -93,16 +93,6 @@ const Login = () => {
     try {
       const token = localStorage.getItem('sprintSightToken');
       if (isLoginView) {
-        // refresh jwt token
-        await fetch(`api/auth/refresh` , {
-          method : 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
-          }
-        });
-
         // --- LOGIN API CALL ---
 
         const response = await fetch(`api/auth/login`, {
@@ -133,16 +123,6 @@ const Login = () => {
           setMessage(result.message || 'Invalid username or password.');
         }
       } else {
-
-        // refresh jwt token
-         await fetch(`api/auth/refresh` , {
-          method : 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
-          }
-        });
 
         // --- 2. UPDATED SIGNUP API CALL ---
         const response = await fetch(`api/auth/signup`, {
@@ -200,6 +180,8 @@ const Login = () => {
         <div className="shape shape-2"></div>
         <div className="shape shape-3"></div>
         <div className="shape shape-4"></div>
+        <div className="shape shape-5"></div>
+        <div className="shape shape-6"></div>
       </div>
 
       <div className="login-container">

@@ -50,10 +50,12 @@
   filter: blur(8px);
 }
 
-.shape-1 { width: 350px; height: 350px; top: -10%; left: -10%; animation-duration: 20s; }
-.shape-2 { width: 450px; height: 450px; bottom: -20%; right: -10%; animation-duration: 25s; animation-direction: alternate-reverse; }
-.shape-3 { width: 200px; height: 200px; top: 30%; left: 80%; animation-duration: 18s; animation-delay: -5s; }
+.shape-1 { width: 350px; height: 350px; top: -10%; left: -10%; animation-duration: 15s; }
+.shape-2 { width: 450px; height: 450px; bottom: -20%; right: -10%; animation-duration: 18s; animation-direction: alternate-reverse; }
+.shape-3 { width: 200px; height: 200px; top: 30%; left: 80%; animation-duration: 17s; animation-delay: -5s; }
 .shape-4 { width: 250px; height: 250px; bottom: 20%; left: 10%; animation-duration: 22s; animation-delay: -10s; }
+.shape-5 { width: 300px; height: 300px; bottom: 5%; left: 50%; animation-duration: 20s; animation-delay: -13s; }
+.shape-6 { width: 350px; height: 350px; bottom: 48%; left: 30%; animation-duration: 22s; animation-delay: -15s;  animation-duration: alternate-reverse;}
 
 @keyframes floatShape {
   0% { transform: translateY(0) scale(1) rotate(0deg); }
@@ -69,7 +71,7 @@
   max-width: 450px; 
   padding: 2.5rem 1.5rem; 
   box-sizing: border-box;
-  background: var(--bg-card);
+  background: var(--bg-card-login);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 20px;
@@ -78,6 +80,7 @@
   animation: scaleIn var(--transition-bounce) 0.1s both;
   position: relative;
   z-index: 1;
+  
 }
 
 /* Logo styling */
@@ -126,7 +129,7 @@
   border-radius: 30px;
   font-size: 1rem;
   color: var(--text-main);
-  background-color: var(--bg-main);
+  background-color: var(--bg-main-login);
   outline: none;
   transition: box-shadow var(--transition-fast), transform var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), background-color var(--transition-fast);
   box-sizing: border-box; 

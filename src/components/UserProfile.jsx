@@ -62,16 +62,34 @@ const UserProfile = () => {
       });
 
       if (response.ok) {
-        alert("Profile updated successfully!");
-        const updatedUser = { ...user, ...formData };
-        localStorage.setItem('sprintSightUser', JSON.stringify(updatedUser));
-        setUser(updatedUser); 
+        
+        // ==========================================
+        // NEW SECURITY CHECK: Did they change the password?
+        // ==========================================
+        if (formData.password && formData.password.trim() !== '') {
+          alert("Password updated successfully! For your security, please log in again with your new password.");
+          
+          // Wipe the zombie session data
+          localStorage.removeItem('sprintSightUser');
+          localStorage.removeItem('sprintSightToken');
+          
+          // Kick them back to the login screen
+          window.location.href = '/';
+          return; // Stop execution so the modal doesn't try to stay open
+        }
+
+        // ... If they didn't change the password, just update the UI normally ...
+        const updatedData = await response.json();
+        localStorage.setItem('sprintSightUser', JSON.stringify(updatedData.data));
         setIsSettingsModalOpen(false);
+        window.location.reload(); // Optional: refresh to show new username/email
+        
       } else {
-        alert("Failed to update profile.");
+        const data = await response.json();
+        alert(data.message);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Failed to update profile", error);
     }
   };
 
@@ -150,7 +168,7 @@ const UserProfile = () => {
       )}
 
       {isSettingsModalOpen && createPortal(
-        <div className="up-modal-overlay">
+        <div className="bv-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setIsSettingsModalOpen(null); }}>
           <div className="up-modal-box">
             <h2>Account Settings</h2>
 

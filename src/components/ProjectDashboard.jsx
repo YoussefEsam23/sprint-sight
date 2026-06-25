@@ -454,14 +454,6 @@ const ProjectDashboard = () => {
           
             <NotificationBell onInviteAccepted={fetchAllProjects} />
              <UserProfile /> 
-          
-           {/* <div 
-            className="user-profile-icon" 
-            onClick={(e) => { e.stopPropagation(); setIsProfileDropdownOpen(!isProfileDropdownOpen); setIsSortDropdownOpen(false); }}
-            title="Account Menu"
-          >
-            <span className="user-initial">{currentUser.username.charAt(0).toUpperCase()}</span>
-          </div> */}
 
           {isProfileDropdownOpen && (
             <div className="profile-dropdown" onClick={(e) => e.stopPropagation()}>

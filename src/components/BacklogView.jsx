@@ -2,26 +2,43 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { createPortal } from 'react-dom'; 
 import '../styling/BacklogView.css';
+
+// Custom Components
 import CustomDropdown from './CustomDropdown';
+import MultiSelectDropdown from './MultiSelectDropdown'; // <-- New Import
+import IssueComments from './IssueComments';
+import { Doc } from 'zod/v4/core';
 
 const BacklogView = () => {
   const { projectId } = useParams(); 
   
+  // --- REAL BACKEND STATES ---
   const [issues, setIssues] = useState([]);
   const [types, setTypes] = useState([]);
   const [priorities, setPriorities] = useState([]);
   const [statuses, setStatuses] = useState([]);
   const [members, setMembers] = useState([]);
+  const [projectComponents, setProjectComponents] = useState([]); // <-- New State
   
   const [isLoading, setIsLoading] = useState(true);
   const [openMenuId, setOpenMenuId] = useState(null);
   
+  // --- MODAL STATES ---
   const [editingIssueId, setEditingIssueId] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false); 
+  const [viewingIssue, setViewingIssue] = useState(null); 
+
   const [formErrors, setFormErrors] = useState({});
   const [formData, setFormData] = useState({ 
-    title: '', description: '', typeId: '', priorityId: '', statusId: '', storyPoints: '', assignedTo: '' 
+    title: '', description: '', typeId: '', priorityId: '', statusId: '', storyPoints: '', assignedTo: '',
+    componentIds: [] // <-- New Array for Multiple Components
   });
+
+  // --- GET CURRENT USER ROLE ---
+  const storedUser = JSON.parse(localStorage.getItem('sprintSightUser')) || {};
+  const currentUserId = storedUser.id;
+  const myRecord = members.find(m => m.member.id === currentUserId);
+  const currentUserRole = myRecord ? myRecord.projectRole : 'VIEWER';
 
   const getCookie = (name) => {
     const value = `; ${document.cookie}`;
@@ -33,19 +50,20 @@ const BacklogView = () => {
   const fetchBacklogData = async () => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('sprintSightToken');
       const headers = {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${localStorage.getItem('sprintSightToken')}`,
         'X-XSRF-TOKEN': getCookie('XSRF-TOKEN'),
         'Content-Type': 'application/json'
       };
 
-      const [issuesRes, typesRes, prioritiesRes, statusesRes, membersRes] = await Promise.all([
+      // Added components fetch to the Promise.all
+      const [issuesRes, typesRes, prioritiesRes, statusesRes, membersRes, componentsRes] = await Promise.all([
         fetch(`/api/projects/${projectId}/issues`, { headers }),
         fetch(`/api/projects/${projectId}/configurations/types`, { headers }),
         fetch(`/api/projects/${projectId}/configurations/priorities`, { headers }),
         fetch(`/api/projects/${projectId}/configurations/statuses`, { headers }),
-        fetch(`/api/projects/${projectId}/members`, { headers })
+        fetch(`/api/projects/${projectId}/members`, { headers }),
+        fetch(`/api/projects/${projectId}/components`, { headers }) 
       ]);
 
       if (issuesRes.ok) setIssues((await issuesRes.json()).data || []);
@@ -53,6 +71,7 @@ const BacklogView = () => {
       if (prioritiesRes.ok) setPriorities((await prioritiesRes.json()).data || []);
       if (statusesRes.ok) setStatuses((await statusesRes.json()).data || []);
       if (membersRes.ok) setMembers((await membersRes.json()).data || []);
+      if (componentsRes.ok) setProjectComponents((await componentsRes.json()).data || []);
 
     } catch (error) {
       console.error("Error fetching backlog data:", error);
@@ -62,24 +81,22 @@ const BacklogView = () => {
   };
 
   useEffect(() => {
-    // THE FIX: Uses mousedown and checks if you clicked outside safely
     const handleClickOutside = (e) => {
-      if (!e.target.closest('.bv-menu-container')) {
-        setOpenMenuId(null);
-      }
+      if (!e.target.closest('.bv-menu-container')) setOpenMenuId(null);
     };
     document.addEventListener('mousedown', handleClickOutside);
-    
     if (projectId) fetchBacklogData();
-    
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [projectId]);
 
-  const handleMenuClick = (id) => { 
+  const handleMenuClick = (e, id) => { 
+    e.stopPropagation(); 
     setOpenMenuId(openMenuId === id ? null : id); 
   };
 
+  // --- OPENS THE EDIT / CREATE FORM ---
   const openIssueModal = (issue = null) => {
+    setViewingIssue(null); 
     if (issue) {
       setEditingIssueId(issue.id);
       setFormData({ 
@@ -89,7 +106,8 @@ const BacklogView = () => {
         priorityId: issue.priority?.id || priorities[0]?.id || '', 
         statusId: issue.status?.id || statuses[0]?.id || '', 
         storyPoints: issue.storyPoints || '', 
-        assignedTo: issue.assignedTo?.id || '' 
+        assignedTo: issue.assignedTo?.id || '',
+        componentIds: issue.components ? issue.components.map(c => c.id) : [] // Map existing components
       });
     } else {
       setEditingIssueId(null);
@@ -102,7 +120,8 @@ const BacklogView = () => {
         typeId: defaultType?.id || '', 
         priorityId: defaultPriority?.id || '', 
         statusId: defaultStatus?.id || '', 
-        storyPoints: '', assignedTo: '' 
+        storyPoints: '', assignedTo: '',
+        componentIds: [] // Empty for new issues
       });
     }
     setFormErrors({}); 
@@ -115,20 +134,13 @@ const BacklogView = () => {
     if (!window.confirm("Are you sure you want to delete this issue?")) return;
     
     setOpenMenuId(null);
+    setViewingIssue(null);
     try {
       const response = await fetch(`/api/projects/${projectId}/issues/${id}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('sprintSightToken')}`,
-          'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
-        }
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('sprintSightToken')}`, 'X-XSRF-TOKEN': getCookie('XSRF-TOKEN') }
       });
-
-      if (response.ok) {
-        setIssues(issues.filter(issue => issue.id !== id));
-      } else {
-        alert("Failed to delete issue.");
-      }
+      if (response.ok) setIssues(issues.filter(issue => issue.id !== id));
     } catch (error) {
       console.error("Error deleting issue:", error);
     }
@@ -146,12 +158,11 @@ const BacklogView = () => {
       typeId: formData.typeId,
       priorityId: formData.priorityId,
       storyPoints: formData.storyPoints ? parseInt(formData.storyPoints) : null,
-      assignedTo: formData.assignedTo || null
+      assignedTo: formData.assignedTo || null,
+      componentIds: formData.componentIds // Include components in payload
     };
 
-    if (editingIssueId && formData.statusId) {
-      payload.statusId = formData.statusId;
-    }
+    if (editingIssueId && formData.statusId) payload.statusId = formData.statusId;
 
     try {
       const url = editingIssueId ? `/api/projects/${projectId}/issues/${editingIssueId}` : `/api/projects/${projectId}/issues`;
@@ -159,11 +170,7 @@ const BacklogView = () => {
 
       const response = await fetch(url, {
         method: method,
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('sprintSightToken')}`,
-          'X-XSRF-TOKEN': getCookie('XSRF-TOKEN'),
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('sprintSightToken')}`, 'X-XSRF-TOKEN': getCookie('XSRF-TOKEN'), 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
@@ -199,22 +206,27 @@ const BacklogView = () => {
         ) : (
           <div className="story-list">
             {issues.map(issue => (
-              <div key={issue.id} className="story-card" style={{ zIndex: openMenuId === issue.id ? 50 : 1 }}>
-                
+              <div key={issue.id} className="story-card" style={{ zIndex: openMenuId === issue.id ? 50 : 1 }} onClick={() => setViewingIssue(issue)}>
                 <div className="story-info">
                   <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px'}}>
                     <span style={{fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--accent-color)', textTransform: 'uppercase'}}>
                       {issue.type?.name || 'Issue'}
                     </span>
-                    <span className="story-id" style={{fontSize: '0.75rem'}}>
+                   {/*  <span className="story-id" style={{fontSize: '0.75rem'}}>
                       #{issue.id?.substring(0, 6)}
-                    </span>
+                    </span> */}
                   </div>
                   
                   <h3 className="story-title">{issue.title}</h3>
                   {issue.description && <p className="story-desc">{issue.description}</p>}
                   
                   <div className="bv-story-meta">
+                    {/* Display Components on Card if available */}
+                    {issue.components && issue.components.length > 0 && (
+                      <span className="bv-badge" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', color: 'var(--accent-color)' }}>
+                        🧩 {issue.components.map(c => c.name).join(', ')}
+                      </span>
+                    )}
                     {issue.assignedTo && <span className="bv-badge">👤 {issue.assignedTo.username}</span>}
                     {issue.status && <span>Status: <strong className="bv-badge-highlight" style={{background: 'none', padding: 0}}>{issue.status.name}</strong></span>}
                     {issue.priority && <span>Priority: <strong>{issue.priority.name}</strong></span>}
@@ -223,7 +235,7 @@ const BacklogView = () => {
                 </div>
                 
                 <div className="bv-menu-container">
-                  <button type="button" className="bv-options-btn" onClick={() => handleMenuClick(issue.id)}>⋮</button>
+                  <button type="button" className="bv-options-btn" onClick={(e) => handleMenuClick(e, issue.id)}>⋮</button>
                   {openMenuId === issue.id && (
                     <div className="bv-dropdown-menu">
                       <button type="button" className="bv-dropdown-item" onClick={(e) => { e.stopPropagation(); openIssueModal(issue); }}>✏️ Edit Issue</button>
@@ -244,86 +256,169 @@ const BacklogView = () => {
         )}
       </div>
 
+      {/* ======================================================== */}
+      {/* MODAL 1: VIEW DETAILS & COMMENTS (Triggered by Card Click) */}
+      {/* ======================================================== */}
+      {viewingIssue && createPortal(
+        <div className="bv-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setViewingIssue(null); }}>
+          <div className="bv-view-modal">
+            
+            {/* LEFT SIDE: Issue Details */}
+            <div className="bv-view-left">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--accent-color)', textTransform: 'uppercase' }}>
+                  {viewingIssue.type?.name || 'Issue'}
+                </span>
+                {/* <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  #{viewingIssue.id?.substring(0, 6)}
+                </span> */}
+              </div>
+              
+              <h2 style={{ margin: '0 0 1.5rem 0', fontSize: '1.8rem', color: 'var(--text-main)', lineHeight: '1.2' }}>
+                {viewingIssue.title}
+              </h2>
+              
+              <div style={{ marginBottom: '2rem' }}>
+                <h4 style={{ color: 'var(--text-muted)', marginBottom: '0.5rem', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Description</h4>
+                <p style={{ color: 'var(--text-main)', lineHeight: '1.6', whiteSpace: 'pre-wrap', backgroundColor: 'var(--bg-main)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                  {viewingIssue.description || <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No description provided.</span>}
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
+                {/* Show components in the view modal */}
+                {viewingIssue.components && viewingIssue.components.length > 0 && (
+                  <span className="bv-badge" style={{ fontSize: '0.9rem', padding: '6px 12px', backgroundColor: 'rgba(245, 158, 11, 0.1)', color: 'var(--accent-color)' }}>
+                    🧩 {viewingIssue.components.map(c => c.name).join(', ')}
+                  </span>
+                )}
+                {viewingIssue.assignedTo && <span className="bv-badge" style={{ fontSize: '0.9rem', padding: '6px 12px' }}>👤 Assignee: <strong>{viewingIssue.assignedTo.fullName || viewingIssue.assignedTo.username}</strong></span>}
+                {viewingIssue.status && <span className="bv-badge" style={{ fontSize: '0.9rem', padding: '6px 12px' }}>Status: <strong className="bv-badge-highlight" style={{background: 'none', padding: 0}}>{viewingIssue.status.name}</strong></span>}
+                {viewingIssue.priority && <span className="bv-badge" style={{ fontSize: '0.9rem', padding: '6px 12px' }}>Priority: <strong>{viewingIssue.priority.name}</strong></span>}
+                {viewingIssue.storyPoints !== null && <span className="bv-badge" style={{ fontSize: '0.9rem', padding: '6px 12px' }}>Story Points: <strong>{viewingIssue.storyPoints}</strong></span>}
+              </div>
+
+              <div className="bv-modal-actions">
+                <button className="bv-btn bv-cancel-btn" onClick={() => setViewingIssue(null)}>Close</button>
+                <button className="bv-btn bv-save-btn" onClick={() => openIssueModal(viewingIssue)}>Edit Details</button>
+              </div>
+            </div>
+
+            {/* RIGHT SIDE: Comments */}
+            <div className="bv-view-right">
+              <IssueComments issueId={viewingIssue.id} currentUserRole={currentUserRole} />
+            </div>
+
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ======================================================== */}
+      {/* MODAL 2: EDIT/CREATE FORM (Triggered by Buttons)           */}
+      {/* ======================================================== */}
       {isModalOpen && createPortal(
-        <div className="bv-modal-overlay">
+        <div className="bv-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setIsModalOpen(false); }}>
           <div className="bv-modal-content">
             <h2 className="bv-modal-title">{editingIssueId ? 'Edit Issue' : 'Create New Issue'}</h2>
             
             <form className="bv-modal-form" onSubmit={handleSaveIssue}>
-              
-              <div className="bv-form-group">
-                <label>Issue Title</label>
-                <input type="text" className="bv-modal-input" placeholder="e.g., Integrate Payment Gateway" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} />
-                {formErrors.title && <span className="bv-form-error">{formErrors.title}</span>}
-              </div>
-              
-              <div className="bv-form-group">
-                <label>Description</label>
-                <textarea className="bv-modal-input" placeholder="Detailed description..." value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} />
-              </div>
-              
-              <div className="bv-form-row">
-                <div className="bv-form-group">
-                  <label>Issue Type</label>
-                  <CustomDropdown 
-                    currentValue={formData.typeId}
-                    options={types.map(t => ({ value: t.id, label: t.name }))}
-                    onChange={(val) => setFormData({...formData, typeId: val})}
-                  />
-                  {formErrors.typeId && <span className="bv-form-error">{formErrors.typeId}</span>}
+              <div className="bv-inputs-container">
+                <div className="bv-text-input-container">
+                  <div className="bv-form-group">
+                    <label>Issue Title</label>
+                    <input type="text" className="bv-modal-input " placeholder="e.g., Integrate Payment Gateway" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} />
+                    {formErrors.title && <span className="bv-form-error">{formErrors.title}</span>}
+                  </div>
+                  
+                  <div className="bv-form-group">
+                    <label>Description</label>
+                    <textarea className="bv-modal-input" placeholder="Detailed description..." value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} />
+                  </div>
                 </div>
+                <div className="bv-select-input-container">
+                  <div className="bv-form-row">
+                    <div className="bv-form-group">
+                      <label>Issue Type</label>
+                      <CustomDropdown 
+                        currentValue={formData.typeId}
+                        options={types.map(t => ({ value: t.id, label: t.name }))}
+                        onChange={(val) => setFormData({...formData, typeId: val})}
+                      />
+                      {formErrors.typeId && <span className="bv-form-error">{formErrors.typeId}</span>}
+                    </div>
 
-                <div className="bv-form-group">
-                  <label>Priority</label>
-                  <CustomDropdown 
-                    currentValue={formData.priorityId}
-                    options={priorities.map(p => ({ value: p.id, label: p.name }))}
-                    onChange={(val) => setFormData({...formData, priorityId: val})}
-                  />
-                  {formErrors.priorityId && <span className="bv-form-error">{formErrors.priorityId}</span>}
+                    <div className="bv-form-group">
+                      <label>Priority</label>
+                      <CustomDropdown 
+                        currentValue={formData.priorityId}
+                        options={priorities.map(p => ({ value: p.id, label: p.name }))}
+                        onChange={(val) => setFormData({...formData, priorityId: val})}
+                      />
+                      {formErrors.priorityId && <span className="bv-form-error">{formErrors.priorityId}</span>}
+                    </div>
+                  </div>
+
+                  <div className="bv-form-row">
+                    <div className="bv-form-group">
+                      <label>Status</label>
+                      <CustomDropdown 
+                        currentValue={formData.statusId}
+                        options={statuses.map(s => ({ value: s.id, label: s.name }))}
+                        onChange={(val) => setFormData({...formData, statusId: val})}
+                      />
+                    </div>
+
+                    <div className="bv-form-group">
+                      <label>Story Points</label>
+                      <input type="number" min="0" max="100" className="bv-modal-input" placeholder="e.g. 5" value={formData.storyPoints} onChange={(e) => setFormData({...formData, storyPoints: e.target.value})} />
+                    </div>
+                  </div>
+
+                  <div className="bv-form-group">
+                    <label>Components</label>
+                    <MultiSelectDropdown 
+                      currentValues={formData.componentIds}
+                      options={projectComponents.map(c => ({ value: c.id, label: c.name }))}
+                      onChange={(values) => setFormData({...formData, componentIds: values})}
+                      placeholder="Select components..."
+                    />
+                  </div>
+
+                  <div className="bv-form-group">
+                    <label>Assign To</label>
+                    <CustomDropdown 
+                      currentValue={formData.assignedTo}
+                      options={[
+                        { value: '', label: 'Unassigned' },
+                        ...members.map(m => ({ 
+                          value: m.member.id, 
+                          label: `${m.member.fullName || m.member.username} (@${m.member.username})` 
+                        }))
+                      ]}
+                      onChange={(val) => setFormData({...formData, assignedTo: val})}
+                    />
+                  </div>
                 </div>
-              </div>
-
-              <div className="bv-form-row">
-                <div className="bv-form-group">
-                  <label>Status</label>
-                  <CustomDropdown 
-                    currentValue={formData.statusId}
-                    options={statuses.map(s => ({ value: s.id, label: s.name }))}
-                    onChange={(val) => setFormData({...formData, statusId: val})}
-                  />
                 </div>
-
-                <div className="bv-form-group">
-                  <label>Story Points</label>
-                  <input type="number" min="0" max="100" className="bv-modal-input" placeholder="e.g. 5" value={formData.storyPoints} onChange={(e) => setFormData({...formData, storyPoints: e.target.value})} />
-                </div>
-              </div>
-
-              <div className="bv-form-group">
-                <label>Assign To</label>
-                <CustomDropdown 
-                  currentValue={formData.assignedTo}
-                  options={[
-                    { value: '', label: 'Unassigned' },
-                    ...members.map(m => ({ 
-                      value: m.member.id, 
-                      label: `${m.member.fullName || m.member.username} (@${m.member.username})` 
-                    }))
-                  ]}
-                  onChange={(val) => setFormData({...formData, assignedTo: val})}
-                />
-              </div>
-
               <div className="bv-modal-actions">
                 <button type="button" className="bv-btn bv-cancel-btn" onClick={() => setIsModalOpen(false)}>Cancel</button>
                 <button type="submit" className="bv-btn bv-save-btn">{editingIssueId ? 'Save Changes' : 'Create Issue'}</button>
               </div>
             </form>
+
           </div>
         </div>,
         document.body 
       )}
+
+       {/* {(() => {
+        if(issues.length===0)
+        {
+          document.querySelector(".story-list").classList.remove("story-list");
+        }
+      })()} */}
+
     </>
   );
 };

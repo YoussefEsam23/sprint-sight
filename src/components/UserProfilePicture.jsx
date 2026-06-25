@@ -40,9 +40,9 @@ const UserProfilePicture = ({ user, onPictureUpdate }) => {
 
       if (response.ok) {
         const result = await response.json();
-        const newImageUrl = result.data.imageUrl; 
+        const newImageUrl = result.data.profilePictureUrl; 
         
-        const updatedUser = { ...user, imageUrl: newImageUrl };
+        const updatedUser = { ...user, profilePictureUrl: newImageUrl };
         localStorage.setItem('sprintSightUser', JSON.stringify(updatedUser));
         onPictureUpdate(updatedUser);
       } else {
@@ -71,7 +71,7 @@ const UserProfilePicture = ({ user, onPictureUpdate }) => {
       });
 
       if (response.ok) {
-        const updatedUser = { ...user, imageUrl: null };
+        const updatedUser = { ...user, profilePictureUrl: null };
         localStorage.setItem('sprintSightUser', JSON.stringify(updatedUser));
         onPictureUpdate(updatedUser);
       } else {
@@ -95,8 +95,8 @@ const UserProfilePicture = ({ user, onPictureUpdate }) => {
       />
 
       <div className="upp-avatar-wrapper" onClick={handleAvatarClick}>
-        {user?.imageUrl ? (
-          <img src={user.imageUrl} alt="Profile" className="upp-image" />
+        {user?.profilePictureUrl ? (
+          <img src={user.profilePictureUrl} alt="Profile" className="upp-image" />
         ) : (
           <div className="upp-fallback">{initial}</div>
         )}
@@ -108,7 +108,7 @@ const UserProfilePicture = ({ user, onPictureUpdate }) => {
 
       {isUploading && <div className="upp-loading">Uploading...</div>}
 
-      {user?.imageUrl && !isUploading && (
+      {user?.profilePictureUrl && !isUploading && (
         <div className="upp-actions">
           <button type="button" className="upp-delete-btn" onClick={handleDeletePicture}>
             Remove Picture
