@@ -140,3 +140,25 @@
   color: var(--text-muted); 
   margin: 0; 
 }
+
+/* --- Added for Inline Replacement --- */
+.cv-card-clickable { cursor: pointer; }
+.cv-empty-desc { font-style: italic; opacity: 0.5; }
+.cv-view-meta-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.cv-view-meta-label { font-size: 0.85rem; font-weight: bold; color: var(--accent-color); text-transform: uppercase; }
+.cv-view-title-text { margin: 0 0 1.5rem 0; font-size: 1.8rem; color: var(--text-main); line-height: 1.2; }
+.cv-view-section { margin-bottom: 2rem; }
+.cv-view-section-title { color: var(--text-muted); margin-bottom: 0.5rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.cv-view-desc-text { color: var(--text-main); line-height: 1.6; white-space: pre-wrap; background-color: var(--bg-main); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); }
+.cv-view-actions { margin-top: auto; border-top: none; padding: 0; }
+.cv-view-right-title { margin: 0 0 1rem 0; font-size: 1.1rem; color: var(--text-main); }
+.cv-view-issues-list { display: flex; flex-direction: column; gap: 12px; padding-right: 8px; }
+.cv-issue-card { background-color: var(--bg-card); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); }
+.cv-issue-card-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.cv-issue-type { font-size: 0.75rem; font-weight: bold; color: var(--accent-color); text-transform: uppercase; }
+.cv-issue-id { font-size: 0.75rem; color: var(--text-muted); }
+.cv-issue-title { margin: 0 0 8px 0; font-size: 0.95rem; color: var(--text-main); }
+.cv-issue-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+.cv-issue-badge { font-size: 0.75rem; padding: 2px 8px; }
+.cv-modal-sm { max-width: 500px; }
+.cv-textarea-sm { min-height: 80px; }

@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import '../styling/HomePage.css';
 
-// --- HYBRID IMPORTS ---
 import BacklogView from './BacklogView';
 import SprintsView from './SprintsView';
 import TeamView from './TeamView'; 
-import ComponentsView from './ComponentsView'; // <-- NEW IMPORT
+import ComponentsView from './ComponentsView'; 
 
 import NotificationBell from './NotificationBell';
 import UserProfile from './UserProfile';
@@ -94,14 +93,13 @@ const HomePage = () => {
   const getBreadcrumbTitle = () => {
     if (activeTab === 'backlog') return 'Main Dashboard';
     if (activeTab === 'sprints') return 'Active Sprints';
-    if (activeTab === 'components') return 'Project Components'; // <-- NEW BREADCRUMB
+    if (activeTab === 'components') return 'Project Components'; 
     if (activeTab === 'team') return 'Team Management';
     return '';
   };
 
   return (
     <div className="homepage-wrapper">
-      
       <aside className="sidebar">
         <div>
           <div className="sidebar-header">
@@ -115,19 +113,8 @@ const HomePage = () => {
               <li><button className={`nav-item ${activeTab === 'backlog' ? 'active' : ''}`} onClick={() => setActiveTab('backlog')}><span className="icon">☰</span> Dashboard</button></li>
               <li><button className={`nav-item ${activeTab === 'sprints' ? 'active' : ''}`} onClick={() => setActiveTab('sprints')}><span className="icon">⚏</span> Active Sprints</button></li>
               <li className="nav-divider"></li>
-              
-              {/* --- NEW COMPONENTS BUTTON --- */}
-              <li>
-                <button className={`nav-item ${activeTab === 'components' ? 'active' : ''}`} onClick={() => setActiveTab('components')}>
-                  Components
-                </button>
-              </li>
-
-              <li>
-                <button className={`nav-item ${activeTab === 'team' ? 'active' : ''}`} onClick={() => setActiveTab('team')}>
-                 Team
-                </button>
-              </li>
+              <li><button className={`nav-item ${activeTab === 'components' ? 'active' : ''}`} onClick={() => setActiveTab('components')}>Components</button></li>
+              <li><button className={`nav-item ${activeTab === 'team' ? 'active' : ''}`} onClick={() => setActiveTab('team')}>Team</button></li>
             </ul>
           </nav>
         </div>
@@ -141,11 +128,11 @@ const HomePage = () => {
         <header className="top-bar">
           <div className="top-bar-left">
              <span className="breadcrumb">
-               Sprint Sight / <strong style={{color: 'var(--text-main)'}}>{getBreadcrumbTitle()}</strong>
+               Sprint Sight / <strong className="hp-breadcrumb-highlight">{getBreadcrumbTitle()}</strong>
              </span>
           </div>
           
-          <div className="top-bar-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div className="top-bar-actions top-bar-actions-inner">
              <button className="icon-btn" onClick={cycleTheme} title={`Theme: ${theme}`}>
                {getThemeIcon()}
              </button>
@@ -157,13 +144,10 @@ const HomePage = () => {
         <main className="main-content">
           <div className="content-glow"></div> 
           <div key={activeTab} className="tab-content-wrapper">
-            
-            {/* The Hybrid Routing Strategy */}
             {activeTab === 'backlog' && <BacklogView />}
             {activeTab === 'sprints' && <SprintsView />}
-            {activeTab === 'components' && <ComponentsView />} {/* <-- NEW VIEW RENDER */}
+            {activeTab === 'components' && <ComponentsView />} 
             {activeTab === 'team' && <TeamView projectId={projectId} />}
-            
           </div>
         </main>
       </div>

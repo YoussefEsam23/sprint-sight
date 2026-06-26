@@ -164,3 +164,40 @@
   cursor: not-allowed;
   box-shadow: none;
 }
+
+/* --- NEW EXTRACTED CLASSES --- */
+.ic-loading-text {
+  margin-top: 2rem;
+  color: var(--text-muted);
+}
+
+.ic-avatar-has-img {
+  padding: 0;
+  overflow: hidden;
+}
+
+.ic-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ic-edit-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.ic-empty-text {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.ic-no-permission-msg {
+  padding: 1rem;
+  background-color: var(--bg-main);
+  border-radius: 8px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}

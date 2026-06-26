@@ -7,13 +7,12 @@ const ComponentsView = () => {
   const { projectId } = useParams();
   
   const [components, setComponents] = useState([]);
-  const [issues, setIssues] = useState([]); // <-- NEW: State to hold project issues
+  const [issues, setIssues] = useState([]); 
   const [currentUserRole, setCurrentUserRole] = useState('VIEWER');
   const [isLoading, setIsLoading] = useState(true);
   
-  // Modal States
-  const [isModalOpen, setIsModalOpen] = useState(false); // For Creating
-  const [viewingComponent, setViewingComponent] = useState(null); // For Viewing Details
+  const [isModalOpen, setIsModalOpen] = useState(false); 
+  const [viewingComponent, setViewingComponent] = useState(null); 
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({ name: '', description: '' });
@@ -34,7 +33,6 @@ const ComponentsView = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Fetch Members, Components, AND Issues all at once!
       const [membersRes, componentsRes, issuesRes] = await Promise.all([
         fetch(`/api/projects/${projectId}/members`, { headers: getAuthHeaders() }),
         fetch(`/api/projects/${projectId}/components`, { headers: getAuthHeaders() }),
@@ -55,7 +53,6 @@ const ComponentsView = () => {
 
       if (issuesRes.ok) {
         const issuesData = await issuesRes.json();
-        console.log("List of issues from backend:", issuesData.data);
         setIssues(issuesData.data || []);
       }
 
@@ -70,7 +67,6 @@ const ComponentsView = () => {
     if (projectId) fetchData();
   }, [projectId]);
 
-  // Allow CREATOR, PRODUCT_OWNER, and SCRUM_MASTER to manage components
   const canManageComponents = ['CREATOR', 'PRODUCT_OWNER', 'SCRUM_MASTER'].includes(currentUserRole);
 
   const handleCreateComponent = async (e) => {
@@ -101,7 +97,7 @@ const ComponentsView = () => {
   };
 
   const handleDeleteComponent = async (e, componentId) => {
-    e.stopPropagation(); // Stops the card click event from firing when you click delete!
+    e.stopPropagation(); 
     if (!window.confirm("Are you sure you want to delete this component? It cannot be deleted if issues are assigned to it.")) return;
     
     try {
@@ -149,9 +145,8 @@ const ComponentsView = () => {
                   
                   <div 
                     key={component.id} 
-                    className="cv-card" 
+                    className="cv-card cv-card-clickable" 
                     onClick={() => setViewingComponent(component)}
-                    style={{ cursor: 'pointer' }}
                   >
                     <div className="cv-card-header">
                       <h3 className="cv-card-title">{component.name}</h3>
@@ -162,7 +157,7 @@ const ComponentsView = () => {
                       )}
                     </div>
                     <p className="cv-card-desc">
-                      {component.description || <span style={{ fontStyle: 'italic', opacity: 0.5 }}>No description provided.</span>}
+                      {component.description || <span className="cv-empty-desc">No description provided.</span>}
                     </p>
                   </div>
 
@@ -183,65 +178,60 @@ const ComponentsView = () => {
       {/* ======================================================== */}
       {viewingComponent && createPortal(
        <div className="bv-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setViewingComponent(null); }}>
-          {/* Reusing the split layout from BacklogView! */}
           <div className="bv-view-modal">
             
-            {/* LEFT SIDE: Component Details */}
             <div className="bv-view-left">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--accent-color)', textTransform: 'uppercase' }}>
+              <div className="cv-view-meta-header">
+                <span className="cv-view-meta-label">
                   Component Details
                 </span>
               </div>
               
-              <h2 style={{ margin: '0 0 1.5rem 0', fontSize: '1.8rem', color: 'var(--text-main)', lineHeight: '1.2' }}>
+              <h2 className="cv-view-title-text">
                 {viewingComponent.name}
               </h2>
               
-              <div style={{ marginBottom: '2rem' }}>
-                <h4 style={{ color: 'var(--text-muted)', marginBottom: '0.5rem', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Description</h4>
-                <p style={{ color: 'var(--text-main)', lineHeight: '1.6', whiteSpace: 'pre-wrap', backgroundColor: 'var(--bg-main)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                  {viewingComponent.description || <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No description provided.</span>}
+              <div className="cv-view-section">
+                <h4 className="cv-view-section-title">Description</h4>
+                <p className="cv-view-desc-text">
+                  {viewingComponent.description || <span className="cv-empty-desc">No description provided.</span>}
                 </p>
               </div>
 
-              <div className="bv-modal-actions" style={{ marginTop: 'auto', borderTop: 'none', padding: 0 }}>
+              <div className="bv-modal-actions cv-view-actions">
                 <button className="bv-btn bv-cancel-btn" onClick={() => setViewingComponent(null)}>Close</button>
               </div>
             </div>
 
-            {/* RIGHT SIDE: Associated Issues */}
             <div className="bv-view-right">
-              <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', color: 'var(--text-main)' }}>Assigned Issues</h3>
+              <h3 className="cv-view-right-title">Assigned Issues</h3>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingRight: '8px' }}>
+              <div className="cv-view-issues-list">
                 {(() => {
-                  // Filter all issues to find the ones that contain this component's ID
                   const assignedIssues = issues.filter(issue => 
                     issue.components && issue.components.some(c => c.id === viewingComponent.id)
                   );
 
                   if (assignedIssues.length === 0) {
-                    return <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No issues are currently assigned to this component.</p>;
+                    return <p className="cv-empty-desc">No issues are currently assigned to this component.</p>;
                   }
 
-                  // Render mini issue cards
                   return assignedIssues.map(issue => (
-                    <div key={issue.id} style={{ backgroundColor: 'var(--bg-card)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--accent-color)', textTransform: 'uppercase' }}>
+                    <div key={issue.id} className="cv-issue-card">
+                      <div className="cv-issue-card-header">
+                        <span className="cv-issue-type">
                           {issue.type?.name || 'Issue'}
                         </span>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        <span className="cv-issue-id">
                           #{issue.id?.substring(0, 6)}
                         </span>
                       </div>
-                      <h4 style={{ margin: '0 0 8px 0', fontSize: '0.95rem', color: 'var(--text-main)' }}>
+                      <h4 className="cv-issue-title">
                         {issue.title}
                       </h4>
-                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        {issue.status && <span className="bv-badge" style={{ fontSize: '0.75rem', padding: '2px 8px' }}>{issue.status.name}</span>}
-                        {issue.assignedTo && <span className="bv-badge" style={{ fontSize: '0.75rem', padding: '2px 8px' }}>👤 {issue.assignedTo.username}</span>}
+                      <div className="cv-issue-badges">
+                        {issue.status && <span className="bv-badge cv-issue-badge">{issue.status.name}</span>}
+                        {issue.assignedTo && <span className="bv-badge cv-issue-badge">👤 {issue.assignedTo.username}</span>}
                       </div>
                     </div>
                   ));
@@ -260,7 +250,7 @@ const ComponentsView = () => {
       {/* ======================================================== */}
       {isModalOpen && canManageComponents && createPortal(
         <div className="bv-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setIsModalOpen(false); }}>
-          <div className="bv-modal-content" style={{ maxWidth: '500px' }}>
+          <div className="bv-modal-content cv-modal-sm">
             <h2 className="bv-modal-title">Create New Component</h2>
             
             <form className="bv-modal-form" onSubmit={handleCreateComponent}>
@@ -280,10 +270,9 @@ const ComponentsView = () => {
               <div className="bv-form-group">
                 <label>Description (Optional)</label>
                 <textarea 
-                  className="bv-modal-input" 
+                  className="bv-modal-input cv-textarea-sm" 
                   placeholder="What does this component cover?" 
                   maxLength={500}
-                  style={{ minHeight: '80px' }}
                   value={formData.description} 
                   onChange={(e) => setFormData({...formData, description: e.target.value})} 
                 />

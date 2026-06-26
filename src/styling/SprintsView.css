@@ -4,8 +4,7 @@
 
 .sv-container {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* Creates exactly 2 equal columns */
-  gap: 16px; 
+  grid-template-columns: repeat(2, 1fr);
   gap: 1rem; 
 }
 
@@ -18,6 +17,17 @@
   border: 1px solid var(--border-color);
   position: relative;
   transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.sv-sprint-card:hover {
+  transform: translateY(-4px) scale(1.01);
+  border-color: var(--accent-color); 
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15);
+}
+
+.sv-active-sprint {
+  border-top: 4px solid var(--accent-color);
 }
 
 /* --- Sprint Header --- */
@@ -30,10 +40,39 @@
   padding-bottom: 1rem;
 }
 
+.sv-header-no-border {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+.sv-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .sv-title {
   color: var(--text-main);
   font-size: 1.4rem;
   margin: 0 0 0.3rem 0;
+}
+
+.sv-status-badge {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: bold;
+}
+
+.sv-status-active {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #10B981;
+}
+
+.sv-status-planning {
+  background-color: var(--bg-hover);
+  color: var(--text-muted);
 }
 
 .sv-dates {
@@ -43,19 +82,43 @@
   font-weight: 600;
 }
 
+.sv-goal-text {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
 .sv-actions {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
 
-/* Dropdown specific position for sprints */
-.sv-dropdown-menu {
-  top: 100%;
-  right: 0;
+/* --- Buttons --- */
+.sv-btn-start {
+  background-color: #10B981;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
 }
+.sv-btn-start:hover { opacity: 0.9; }
 
-/* --- Add Issues Button --- */
+.sv-btn-complete {
+  background-color: #3B82F6;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+.sv-btn-complete:hover { opacity: 0.9; }
+
 .sv-add-issues-btn {
   background: transparent;
   border: 1px solid var(--accent-color);
@@ -75,40 +138,8 @@
   transform: translateY(-1px);
 }
 
-/* --- Sprint Body (The dropzone area) --- */
-.sv-body {
-  min-height: 100px;
-  background: var(--bg-main);
-  border-radius: 8px;
-  padding: 1rem;
-  border: 1px dashed var(--border-color);
-}
-
-.sv-empty-text {
-  text-align: center;
-  color: var(--text-muted);
-  padding: 2rem 0;
-  font-weight: 500;
-}
-
-/* --- Sprint Story Item (Mini version of story card) --- */
-.sv-story-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-}
-
-.sv-story-id {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  font-weight: 600;
-}
-
-.sv-story-title {
-  font-size: 1.1rem;
-  margin: 0.2rem 0 0 0;
-  color: var(--text-main);
-  font-weight: 500;
+.sv-text-danger {
+  color: #e74c3c !important;
 }
 
 .sv-remove-btn {
@@ -125,6 +156,379 @@
 .sv-remove-btn:hover {
   opacity: 0.7;
   text-decoration: underline;
+}
+
+/* Dropdown specific position for sprints */
+.sv-dropdown-menu {
+  top: 100%;
+  right: 0;
+}
+
+/* --- Dashboard Metrics Summary --- */
+.sv-metrics-summary {
+  min-height: auto;
+  padding: 1.2rem;
+  display: flex;
+  justify-content: space-around;
+  background: var(--bg-main);
+  border-radius: 8px;
+  border: 1px dashed var(--border-color);
+  margin-top: 1.5rem;
+}
+
+.sv-empty-metrics {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+.sv-metric-item {
+  text-align: center;
+}
+
+.sv-metric-value {
+  display: block;
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: var(--text-main);
+}
+
+.sv-metric-success { color: #10B981; }
+.sv-metric-danger { color: #EF4444; }
+
+.sv-metric-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sv-metric-divider {
+  width: 1px;
+  background-color: var(--border-color);
+}
+
+/* --- Empty Board State --- */
+.sv-loading-state {
+  text-align: center;
+  padding: 4rem;
+  color: var(--text-muted);
+}
+
+.sv-empty-board {
+  text-align: center;
+  padding: 4rem;
+  background: var(--bg-card);
+  border-radius: 12px;
+  border: 1px dashed var(--border-color);
+}
+
+.sv-empty-board-title {
+  color: var(--text-main);
+  margin-bottom: 0.5rem;
+}
+
+.sv-empty-board-text {
+  color: var(--text-muted);
+}
+
+/* =========================================
+   SPRINTS MODAL (PORTAL ISOLATION)
+   ========================================= */
+.sv-modal-overlay { 
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+  background-color: rgba(0, 0, 0, 0.65); 
+  display: flex; justify-content: center; align-items: center; 
+  z-index: 999999; 
+  backdrop-filter: blur(8px); 
+  animation: svFadeInOverlay 0.2s ease-out;
+}
+
+.sv-modal-overlay-top {
+  z-index: 9999999; /* Escapes issue modal above sprint modal */
+}
+
+@keyframes svFadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
+
+.sv-modal-content { 
+  background-color: var(--bg-sidebar); 
+  color: var(--text-main); 
+  width: 90%; max-width: 480px; 
+  border-radius: 20px; 
+  padding: 2.5rem; 
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
+  border: 1px solid var(--border-color); 
+  animation: svSlideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sv-modal-lg {
+  max-width: 600px;
+}
+
+@keyframes svSlideUpModal {
+  from { transform: translateY(30px) scale(0.98); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.sv-modal-title { color: var(--text-main); font-size: 1.5rem; margin: 0 0 1.8rem 0; font-weight: 700; letter-spacing: -0.5px; }
+
+.sv-modal-desc {
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+/* View Sprint Details Modal Splitting */
+.sv-modal-left {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(90vh - 5rem);
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.sv-modal-right {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-height: calc(90vh - 5rem);
+}
+
+.sv-modal-meta-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.sv-modal-meta-label {
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: var(--accent-color);
+  text-transform: uppercase;
+}
+
+.sv-modal-title-text {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.8rem;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.sv-modal-section {
+  margin-bottom: 2rem;
+}
+
+.sv-modal-section-title {
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sv-modal-goal-text {
+  color: var(--text-main);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  background-color: var(--bg-main);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.sv-modal-dates-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.sv-modal-date-badge {
+  font-size: 0.9rem;
+  padding: 6px 12px;
+  background-color: var(--bg-hover);
+  color: var(--text-main);
+  border-radius: 12px;
+}
+
+.sv-view-actions {
+  margin-top: auto;
+  padding-top: 1.5rem;
+  border-top: none;
+}
+
+.sv-view-actions-top {
+  margin-top: auto;
+}
+
+.sv-modal-right-title {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  color: var(--text-main);
+  flex-shrink: 0;
+}
+
+.sv-modal-issues-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-right: 8px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.sv-modal-empty-issues {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* Clickable Issue Card in Sprint Modal */
+.sv-issue-card {
+  background-color: var(--bg-card);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sv-issue-card:first-child{
+  margin-top: 10px;
+}
+
+.sv-issue-card:hover {
+  border-color: var(--accent-color);
+  transform: translateY(-2px);
+}
+
+.sv-issue-card-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  align-items: center;
+}
+
+.sv-issue-card-type {
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: var(--accent-color);
+  text-transform: uppercase;
+}
+
+.sv-issue-card-id {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: 8px;
+}
+
+.sv-issue-card-title {
+  margin: 0 0 8px 0;
+  font-size: 0.95rem;
+  color: var(--text-main);
+}
+
+.sv-issue-card-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sv-issue-badge {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  background-color: var(--bg-hover);
+  color: var(--text-main);
+  border-radius: 12px;
+}
+
+/* Form Styles */
+.sv-modal-form { display: flex; flex-direction: column; gap: 1.4rem; }
+.sv-form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+.sv-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+.sv-form-group label { font-weight: 600; color: var(--text-muted); font-size: 0.85rem; letter-spacing: 0.3px; }
+.sv-mb-1 { margin-bottom: 1rem; }
+
+.sv-modal-input { 
+  padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 10px; 
+  font-size: 0.95rem; color: var(--text-main); background-color: var(--bg-main); 
+  outline: none; transition: all 0.2s ease; font-family: inherit; width: 100%; box-sizing: border-box;
+}
+
+.sv-modal-input:focus { 
+  border-color: var(--accent-color); background-color: var(--bg-card);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15); 
+}
+
+textarea.sv-modal-input { resize: vertical; line-height: 1.5; }
+.sv-textarea-sm { min-height: 80px; }
+
+/* Complete Sprint Metrics */
+.sv-complete-metrics-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.sv-complete-metric-box {
+  flex: 1;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.sv-metric-success-box {
+  background-color: rgba(16, 185, 129, 0.1);
+  border: 1px solid #10B981;
+}
+
+.sv-metric-danger-box {
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid #EF4444;
+}
+
+.sv-complete-metric-value {
+  margin: 0;
+  font-size: 1.5rem;
+}
+.sv-metric-success-text { color: #10B981; }
+.sv-metric-danger-text { color: #EF4444; }
+
+.sv-complete-metric-label {
+  font-size: 0.8rem;
+  color: var(--text-main);
+}
+
+/* Actions */
+.sv-modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color); }
+.sv-btn { padding: 10px 24px; border: none; border-radius: 8px; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.2s ease; }
+.sv-cancel-btn { background-color: transparent; color: var(--text-muted); }
+.sv-cancel-btn:hover { background-color: var(--bg-hover); color: var(--text-main); }
+.sv-save-btn { background-color: var(--accent-color); color: var(--btn-text); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2); }
+.sv-save-btn:hover:not(:disabled) { background-color: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(245, 158, 11, 0.3); }
+.sv-save-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+.sv-btn-save-start { background-color: #10B981 !important; }
+.sv-btn-save-complete { background-color: #3B82F6 !important; }
+.sv-btn-delete-left { background-color: rgba(239, 68, 68, 0.1); color: #EF4444; margin-right: auto; }
+.sv-btn-delete-left:hover { background-color: #EF4444; color: white; }
+
+/* Overridden badges from BacklogView applied here */
+.sv-badge-components {
+  font-size: 0.9rem;
+  padding: 6px 12px;
+  background-color: rgba(245, 158, 11, 0.1);
+  color: var(--accent-color);
+}
+.sv-badge-lg {
+  font-size: 0.9rem;
+  padding: 6px 12px;
+}
+.sv-badge-no-bg {
+  background: none;
+  padding: 0;
 }
 
 /* --- Pull Issues Modal List --- */
@@ -163,108 +567,65 @@
   font-weight: 600;
 }
 
-.add-issues-btn {
-  background: transparent;
-  border: 1px solid var(--accent-color);
-  color: var(--accent-color);
-  padding: 6px 14px;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.sv-pull-item-id {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-right: 10px;
 }
 
-.add-issues-btn:hover {
+.sv-pull-empty {
+  text-align: center;
+  color: var(--text-muted);
+}
+
+/* --- New Remove From Sprint Button --- */
+.sv-btn-remove-sprint {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: var(--accent-color);
+  margin-right: 10px;
+}
+.sv-btn-remove-sprint:hover {
   background-color: var(--accent-color);
   color: var(--btn-text);
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
   transform: translateY(-1px);
 }
 
-.sv-story-item {
-  background: var(--bg-card);
-  padding: 1rem 1.2rem;
-  border-left: 4px solid var(--accent-color);
-  border-radius: 8px;
+/* --- Component Grouping in Add Issues Modal --- */
+.sv-issue-group {
+  margin-bottom: 0.5rem;
+}
+
+.sv-group-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 10px 14px;
+  background-color: var(--bg-card);
   border: 1px solid var(--border-color);
+  border-radius: 8px;
   cursor: pointer;
-  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+  font-weight: 600;
+  color: var(--text-main);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
-/* --- ADD THIS NEW BLOCK FOR THE HOVER EFFECT --- */
-.sv-story-item:hover {
-  transform: translateY(-4px) scale(1.01);
-  border-color: var(--accent-color); 
-  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15);
+.sv-group-header:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--accent-color);
 }
 
-.sv-sprint-card:hover{
-      transform: translateY(-4px) scale(1.01);
-  border-color: var(--accent-color); 
-  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15);
+.sv-group-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-left: 1rem;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  border-left: 2px dashed var(--border-color);
+  margin-left: 14px;
 }
 
-/* =========================================
-   SPRINTS MODAL (PORTAL ISOLATION)
-   ========================================= */
-.sv-modal-overlay { 
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
-  background-color: rgba(0, 0, 0, 0.65); 
-  display: flex; justify-content: center; align-items: center; 
-  z-index: 999999; /* Escapes the stacking context! */
-  backdrop-filter: blur(8px); 
-  animation: svFadeInOverlay 0.2s ease-out;
+.sv-startdate-note{
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }
-
-@keyframes svFadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
-
-.sv-modal-content { 
-  background-color: var(--bg-sidebar); 
-  color: var(--text-main); 
-  width: 90%; max-width: 480px; 
-  border-radius: 20px; 
-  padding: 2.5rem; 
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
-  border: 1px solid var(--border-color); 
-  animation: svSlideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes svSlideUpModal {
-  from { transform: translateY(30px) scale(0.98); opacity: 0; }
-  to { transform: translateY(0) scale(1); opacity: 1; }
-}
-
-.sv-modal-title { color: var(--text-main); font-size: 1.5rem; margin: 0 0 1.8rem 0; font-weight: 700; letter-spacing: -0.5px; }
-
-/* Form Styles */
-.sv-modal-form { display: flex; flex-direction: column; gap: 1.4rem; }
-.sv-form-group { display: flex; flex-direction: column; gap: 0.5rem; }
-.sv-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
-.sv-form-group label { font-weight: 600; color: var(--text-muted); font-size: 0.85rem; letter-spacing: 0.3px; }
-
-.sv-modal-input { 
-  padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 10px; 
-  font-size: 0.95rem; color: var(--text-main); background-color: var(--bg-main); 
-  outline: none; transition: all 0.2s ease; font-family: inherit; width: 100%; box-sizing: border-box;
-}
-
-.sv-modal-input:focus { 
-  border-color: var(--accent-color); background-color: var(--bg-card);
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15); 
-}
-
-textarea.sv-modal-input { resize: vertical; min-height: 100px; line-height: 1.5; }
-
-/* Actions */
-.sv-modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color); }
-.sv-btn { padding: 10px 24px; border: none; border-radius: 8px; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.2s ease; }
-.sv-cancel-btn { background-color: transparent; color: var(--text-muted); }
-.sv-cancel-btn:hover { background-color: var(--bg-hover); color: var(--text-main); }
-.sv-save-btn { background-color: var(--accent-color); color: var(--btn-text); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2); }
-.sv-save-btn:hover:not(:disabled) { background-color: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(245, 158, 11, 0.3); }
-.sv-save-btn:disabled { opacity: 0.7; cursor: not-allowed; }

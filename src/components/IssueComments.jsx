@@ -107,7 +107,7 @@ const IssueComments = ({ issueId, currentUserRole }) => {
     return date.toLocaleDateString() + ' at ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  if (isLoading) return <div style={{ marginTop: '2rem', color: 'var(--text-muted)' }}>Loading comments...</div>;
+  if (isLoading) return <div className="ic-loading-text">Loading comments...</div>;
 
   return (
     <div className="ic-container">
@@ -116,17 +116,14 @@ const IssueComments = ({ issueId, currentUserRole }) => {
       <div className="ic-list">
         {comments.map(comment => {
           const isMyComment = comment.author.id === currentUserId;
-          
-          // --- THE FIX: Check for the image URL (handling both keys just in case) ---
           const authorImage = comment.author.profilePictureUrl || comment.author.imageUrl;
           
           return (
             <div key={comment.id} className="ic-card">
               
-              {/* --- UPDATED AVATAR DIV --- */}
-              <div className="ic-avatar" style={{ padding: authorImage ? 0 : '', overflow: 'hidden' }}>
+              <div className={`ic-avatar ${authorImage ? 'ic-avatar-has-img' : ''}`}>
                 {authorImage ? (
-                  <img src={authorImage} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={authorImage} alt="Profile" className="ic-avatar-img" />
                 ) : (
                   comment.author.username.charAt(0).toUpperCase()
                 )}
@@ -147,7 +144,7 @@ const IssueComments = ({ issueId, currentUserRole }) => {
                       value={editContent} 
                       onChange={(e) => setEditContent(e.target.value)} 
                     />
-                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                    <div className="ic-edit-actions">
                       <button type="button" className="ic-action-btn" onClick={() => setEditingId(null)}>Cancel</button>
                       <button type="button" className="ic-submit-btn" disabled={isSubmitting} onClick={() => handleUpdateComment(comment.id)}>
                         {isSubmitting ? 'Saving...' : 'Save'}
@@ -169,7 +166,7 @@ const IssueComments = ({ issueId, currentUserRole }) => {
             </div>
           );
         })}
-        {comments.length === 0 && <p style={{color: 'var(--text-muted)', fontSize: '0.9rem'}}>No comments yet. Start the discussion!</p>}
+        {comments.length === 0 && <p className="ic-empty-text">No comments yet. Start the discussion!</p>}
       </div>
 
       {canComment ? (
@@ -190,7 +187,7 @@ const IssueComments = ({ issueId, currentUserRole }) => {
           </button>
         </div>
       ) : (
-        <div style={{ padding: '1rem', backgroundColor: 'var(--bg-main)', borderRadius: '8px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+        <div className="ic-no-permission-msg">
           You are viewing this project as a Viewer and cannot post comments.
         </div>
       )}

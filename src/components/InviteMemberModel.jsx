@@ -60,7 +60,6 @@ const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
 
   const handleSendInvite = async (e) => {
     e.preventDefault();
-    
     if (!selectedUser) {
       setStatus({ type: 'error', message: 'Please select a user from the dropdown.' });
       return;
@@ -90,7 +89,6 @@ const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
 
       if (inviteResponse.ok) {
         setStatus({ type: 'success', message: 'Invitation sent successfully!' });
-        
         setTimeout(() => {
           setSearchQuery('');
           setSelectedUser(null);
@@ -121,7 +119,7 @@ const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="modal-overlay" style={{ zIndex: 999999 }} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className="modal-overlay invite-modal-top" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="modal-content">
         <h2 className="invite-modal-header">Invite Team Member</h2>
         <p className="invite-modal-subtitle">
@@ -129,41 +127,30 @@ const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
         </p>
 
         <form onSubmit={handleSendInvite} className="invite-form">
-          
           <div className="form-group" ref={searchContainerRef}>
             <label className="invite-label">Find User</label>
             
-            {/* --- 1. SELECTED USER CARD --- */}
             {selectedUser ? (
               <div className="selected-user-card">
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  
-                  {/* Selected User Avatar */}
-                  <div className="search-avatar-mini" style={{ overflow: 'hidden', padding: selectedUser.profilePictureUrl ? 0 : '' }}>
+                <div className="invite-user-row">
+                  <div className={`search-avatar-mini ${selectedUser.profilePictureUrl ? 'has-pic' : ''}`}>
                     {selectedUser.profilePictureUrl ? (
-                      <img src={selectedUser.profilePictureUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img src={selectedUser.profilePictureUrl} alt="Profile" className="search-avatar-img" />
                     ) : (
                       selectedUser.username.charAt(0).toUpperCase()
                     )}
                   </div>
 
                   <div>
-                    <div style={{ fontWeight: 'bold', color: 'var(--text-main)', fontSize: '0.9rem' }}>
+                    <div className="invite-user-name">
                       {selectedUser.fullName || selectedUser.username}
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    <div className="invite-user-handle">
                       @{selectedUser.username}
                     </div>
                   </div>
                 </div>
-                <button 
-                  type="button" 
-                  className="clear-user-btn" 
-                  onClick={() => { setSelectedUser(null); setSearchQuery(''); }}
-                  title="Remove selection"
-                >
-                  ✕
-                </button>
+                <button type="button" className="clear-user-btn" onClick={() => { setSelectedUser(null); setSearchQuery(''); }} title="Remove selection">✕</button>
               </div>
             ) : (
               <div className="search-dropdown-container">
@@ -176,46 +163,33 @@ const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
                   autoComplete="off"
                 />
 
-                {/* --- 2. LIVE SEARCH RESULTS DROPDOWN --- */}
                 {searchQuery && !selectedUser && (
                   <div className="search-results-menu">
                     {isSearching ? (
-                      <div style={{ padding: '10px', fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-                        Searching...
-                      </div>
+                      <div className="invite-search-msg">Searching...</div>
                     ) : searchResults.length > 0 ? (
                       searchResults.map(user => (
-                        <div 
-                          key={user.id} 
-                          className="search-result-item"
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setSearchResults([]); 
-                          }}
-                        >
-                          {/* Search Result Avatar */}
-                          <div className="search-avatar-mini" style={{ overflow: 'hidden', padding: user.profilePictureUrl ? 0 : '' }}>
+                        <div key={user.id} className="search-result-item" onClick={() => { setSelectedUser(user); setSearchResults([]); }}>
+                          <div className={`search-avatar-mini ${user.profilePictureUrl ? 'has-pic' : ''}`}>
                             {user.profilePictureUrl ? (
-                              <img src={user.profilePictureUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <img src={user.profilePictureUrl} alt="Profile" className="search-avatar-img" />
                             ) : (
                               user.username.charAt(0).toUpperCase()
                             )}
                           </div>
 
                           <div>
-                            <div style={{ fontWeight: 'bold', color: 'var(--text-main)', fontSize: '0.85rem' }}>
+                            <div className="invite-user-name">
                               {user.fullName || user.username}
                             </div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                            <div className="invite-user-handle">
                               @{user.username}
                             </div>
                           </div>
                         </div>
                       ))
                     ) : (
-                      <div style={{ padding: '10px', fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-                        No users found
-                      </div>
+                      <div className="invite-search-msg">No users found</div>
                     )}
                   </div>
                 )}
@@ -224,7 +198,7 @@ const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
           </div>
 
           <div className="form-group">
-            <label className="invite-label" style={{ marginBottom: '0.8rem' }}>Project Role</label>
+            <label className="invite-label invite-role-label">Project Role</label>
             <div>
               <CustomDropdown 
                 currentValue={intendedRole}
@@ -254,11 +228,7 @@ const InviteMemberModel = ({ isOpen, onClose, projectId }) => {
             >
               Cancel
             </button>
-            <button 
-              type="submit" 
-              disabled={isSubmitting || !selectedUser}
-              className="invite-submit-btn"
-            >
+            <button type="submit" disabled={isSubmitting || !selectedUser} className="invite-submit-btn">
               {isSubmitting ? 'Sending...' : 'Send Invite'}
             </button>
           </div>

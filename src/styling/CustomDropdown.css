@@ -1,12 +1,15 @@
-/* --- CustomDropdown.css --- */
-
 .custom-dropdown-container {
+  width: 100%;
   position: relative;
   display: inline-block;
 }
 
 .custom-dropdown-button {
-  fontSize: 0.7rem;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.7rem;
   padding: 4px 10px;
   background-color: var(--bg-hover, #1E293B);
   color: var(--text-main, #F8FAFC);
@@ -17,9 +20,6 @@
   border: 1px solid var(--border-color, #334155);
   cursor: pointer;
   outline: none;
-  display: flex;
-  align-items: center;
-  gap: 6px;
   font-family: inherit;
   transition: all 0.2s ease;
   height: 50px;
@@ -34,28 +34,36 @@
 }
 
 .custom-dropdown-menu {
+  width: 100%;
   position: absolute;
   top: 100%;
-  right: 0;
-  margin-top: 6px;
+  left: 0;
+  z-index: 99999;
   background-color: var(--bg-card, #0F172A);
   border: 1px solid var(--border-color, #334155);
   border-radius: 8px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.8);
-  z-index: 999;
-  min-width: 140px;
-  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  margin-top: 4px;
+  max-height: 220px;
+  overflow-y: auto;
   animation: slideDown 0.15s ease-out;
 }
 
 .custom-dropdown-readonly {
   padding: 10px 12px;
+  opacity: 0.6;
+  font-style: italic;
   font-size: 0.7rem;
   color: var(--text-muted, #64748B);
   font-weight: bold;
   border-bottom: 1px solid var(--border-color, #334155);
   text-transform: uppercase;
   cursor: not-allowed;
+}
+
+.custom-dropdown-empty {
+  padding: 10px 12px;
+  color: var(--text-muted);
 }
 
 .custom-dropdown-item {
@@ -75,26 +83,10 @@
 
 .custom-dropdown-item:hover {
   background-color: var(--accent-color, #F5A623);
-  color: #111; /* Dark text for contrast against the accent color */
+  color: #111; 
 }
 
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-/* --- Dropdown Menu Items --- */
-.custom-dropdown-item {
-  padding: 10px 12px;
-  cursor: pointer;
-  color: var(--text-main);
-  transition: background-color 0.2s ease;
-  
-  /* --- THE FIX: Explicit border for both themes --- */
-  border-bottom: 1px solid var(--border-color);
-}
-
-/* We remove the border from the very last item so it doesn't double-up with the menu's bottom border! */
-.custom-dropdown-item:last-child {
-  border-bottom: none;
 }

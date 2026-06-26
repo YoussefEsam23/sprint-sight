@@ -370,6 +370,17 @@ select.bv-modal-input option {
   box-shadow: 0 6px 16px rgba(245, 158, 11, 0.3); 
 }
 
+.bv-delete-btn{
+  background-color: rgba(239, 68, 68, 0.1); 
+  color: #EF4444; 
+  margin-right: auto;
+}
+
+.bv-delete-btn:hover{
+  background-color: #EF4444; 
+  color: white;
+}
+
 /* =========================================
    NEW: VIEW ISSUE DETAILS MODAL (Two-Column)
    ========================================= */
@@ -433,3 +444,19 @@ select.bv-modal-input option {
   flex-direction: row;
   justify-content: space-between;
 }
+
+/* --- Added for Inline Replacement --- */
+.bv-card-top { z-index: 50; }
+.bv-issue-header-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.bv-issue-type { font-size: 0.75rem; font-weight: bold; color: var(--accent-color); text-transform: uppercase; }
+.bv-badge-components { background-color: rgba(245, 158, 11, 0.1); color: var(--accent-color); }
+.bv-badge-no-bg { background: none; padding: 0; }
+.bv-text-danger { color: #e74c3c; }
+.bv-view-meta-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.bv-view-meta-label { font-size: 0.85rem; font-weight: bold; color: var(--accent-color); text-transform: uppercase; }
+.bv-view-title-text { margin: 0 0 1.5rem 0; font-size: 1.8rem; color: var(--text-main); line-height: 1.2; }
+.bv-view-section { margin-bottom: 2rem; }
+.bv-view-section-title { color: var(--text-muted); margin-bottom: 0.5rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.bv-view-desc-text { color: var(--text-main); line-height: 1.6; white-space: pre-wrap; background-color: var(--bg-main); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); }
+.bv-view-badges-row { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem; }
+.bv-badge-lg { font-size: 0.9rem; padding: 6px 12px; }

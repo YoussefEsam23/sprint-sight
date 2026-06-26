@@ -5,11 +5,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import '../styling/ProjectDashboard.css';
 
-// --- IMPORT LOGOS ---
 import logoLight from '/sprint-sight-logo.png';
 import logoDark from '/sprint-sight-logo-dark.png';
 
-//components
 import NotificationBell from './NotificationBell';
 import UserProfile from './UserProfile';
 
@@ -18,7 +16,6 @@ const projectSchema = z.object({
   description: z.string().min(10, "Please provide a short description (min 10 characters)")
 });
 
-// Helper to get CSRF token
 const getCookie = (name) => {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
@@ -27,7 +24,6 @@ const getCookie = (name) => {
 };
 
 const ProjectDashboard = () => {
-  // --- REAL API PROJECT STATES ---
   const [projects, setProjects] = useState([]);
   const [isProjectsLoading, setIsProjectsLoading] = useState(true);
 
@@ -36,15 +32,12 @@ const ProjectDashboard = () => {
   const [openMenuId, setOpenMenuId] = useState(null); 
   const [editingProjectId, setEditingProjectId] = useState(null);
   
-  // --- SEARCH & SORT STATES ---
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOption, setSortOption] = useState('newest'); 
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
   
-  // --- THEME ENGINE STATE ---
   const [theme, setTheme] = useState(localStorage.getItem('sprintSightTheme') || 'system');
   
-  // --- PROFILE & SETTINGS STATES ---
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [profileMessage, setProfileMessage] = useState('');
@@ -82,7 +75,6 @@ const ProjectDashboard = () => {
           'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
         };
 
-        // 1. Fire BOTH requests simultaneously
         const [ownedResponse, memberResponse] = await Promise.all([
           fetch('api/projects/owned', { method: 'GET', credentials: 'include', headers }),
           fetch('api/projects/member', { method: 'GET', credentials: 'include', headers })
@@ -90,25 +82,18 @@ const ProjectDashboard = () => {
         
         let combinedProjects = [];
 
-        // 2. Parse Owned Projects
         if (ownedResponse.ok) {
           const ownedJson = await ownedResponse.json();
           const owned = ownedJson.data || ownedJson || [];
           combinedProjects = [...combinedProjects, ...owned];
-        } else {
-          console.error("Failed to fetch owned projects. Status:", ownedResponse.status);
         }
 
-        // 3. Parse Member Projects
         if (memberResponse.ok) {
           const memberJson = await memberResponse.json();
           const member = memberJson.data || memberJson || [];
           combinedProjects = [...combinedProjects, ...member];
-        } else {
-          console.error("Failed to fetch member projects. Status:", memberResponse.status);
         }
 
-        // 4. Deduplicate (Just in case the backend returns a project in both lists)
         const uniqueProjects = Array.from(
           new Map(combinedProjects.map(project => [project.id || project._id, project])).values()
         );
@@ -126,7 +111,6 @@ const ProjectDashboard = () => {
     fetchAllProjects();
   }, []);
 
-  // --- CLICK OUTSIDE HANDLER ---
   useEffect(() => {
     const handleClickOutside = () => {
       setOpenMenuId(null);
@@ -137,7 +121,6 @@ const ProjectDashboard = () => {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  // --- THEME EFFECT ---
   useEffect(() => {
     const applyTheme = (selectedTheme) => {
       if (selectedTheme === 'system') {
@@ -181,7 +164,6 @@ const ProjectDashboard = () => {
     setIsModalOpen(true); 
   };
 
-  // --- DELETE PROJECT API ---
   const handleDeleteClick = async (e, id) => {
     e.stopPropagation();
     if (!window.confirm("Are you sure you want to delete this project?")) return;
@@ -216,7 +198,6 @@ const ProjectDashboard = () => {
 
   const closeModal = () => { setIsModalOpen(false); reset(); };
 
-  // --- CREATE / UPDATE PROJECT API ---
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
@@ -228,7 +209,6 @@ const ProjectDashboard = () => {
       };
 
       if (editingProjectId) {
-        // --- EDIT PROJECT (PUT) ---
         const response = await fetch(`api/projects/${editingProjectId}`, {
           method: 'PUT',
           credentials: 'include',
@@ -239,18 +219,15 @@ const ProjectDashboard = () => {
         if (response.ok) {
           const rawResponse = await response.json();
           const updatedProject = rawResponse.data || rawResponse.project || rawResponse;
-          
           setProjects(prevProjects => prevProjects.map(p => 
             (p.id || p._id) === editingProjectId ? updatedProject : p
           ));
-          
           setIsModalOpen(false);
           reset(); 
         } else {
           alert("Failed to update project");
         }
       } else {
-        // --- CREATE PROJECT (POST) ---
         const response = await fetch(`api/projects`, {
           method: 'POST',
           credentials: 'include',
@@ -261,9 +238,7 @@ const ProjectDashboard = () => {
         if (response.ok) {
           const rawResponse = await response.json();
           const newProject = rawResponse.data || rawResponse.project || rawResponse;
-          
           setProjects(prevProjects => [...prevProjects, newProject]);
-          
           setIsModalOpen(false);
           reset(); 
         } else {
@@ -277,11 +252,9 @@ const ProjectDashboard = () => {
     }
   };
 
-  // --- ACCOUNT & PROFILE HANDLERS ---
   const handleLogout = async () => {
     try {
       const token = localStorage.getItem('sprintSightToken');
-      
       await fetch(`api/auth/refresh`, {
         method: 'POST',
         credentials: 'include',
@@ -396,7 +369,6 @@ const ProjectDashboard = () => {
     }
   };
 
-// --- BULLETPROOF FILTER & SORT LOGIC ---
   const safeProjects = Array.isArray(projects) ? projects : [];
 
   const filteredAndSortedProjects = safeProjects
@@ -525,12 +497,10 @@ const ProjectDashboard = () => {
             <>
               {filteredAndSortedProjects.map((project) => {
                 const projectId = project.id || project._id; 
-                
-                // --- ROLE CALCULATION ---
                 const isCreator = project.createdBy?.id === currentUserId;
                 
                 return (
-                  <div key={projectId} className="project-card" style={{ zIndex: openMenuId === projectId ? 50 : 1 }} onClick={() => handleProjectClick(projectId)}>
+                  <div key={projectId} className={`project-card ${openMenuId === projectId ? 'project-card-top' : ''}`} onClick={() => handleProjectClick(projectId)}>
                     
                     <div className="project-icon">
                        📁
@@ -541,29 +511,16 @@ const ProjectDashboard = () => {
                       <p className="project-desc">{project.description}</p>
                     </div>
 
-                    <div className="project-meta project-meta-spaced" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                    <div className="project-meta project-meta-spaced">
                       
-                      <span style={{
-                        fontSize: '0.75rem',
-                        fontWeight: '700',
-                        padding: '6px 14px',
-                        borderRadius: '20px',
-                        backgroundColor: isCreator ? 'rgba(245, 158, 11, 0.15)' : 'var(--bg-hover)',
-                        color: isCreator ? 'var(--accent-color)' : 'var(--text-muted)',
-                        border: isCreator ? '1px solid rgba(245, 158, 11, 0.3)' : '1px solid var(--border-color)',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px'
-                      }}>
+                      <span className={`role-badge ${isCreator ? 'role-badge-creator' : 'role-badge-member'}`}>
                         {isCreator ? 'Creator' : 'Member'}
                       </span>
 
-                      {/* --- ROLE BASED ACCESS CONTROL FOR EDITING --- */}
                       {(() => {
-                        // Check if backend sent their role. If not, fallback to whether they created it.
                         const projectRole = project.role || project.projectRole || project.userRole || '';
                         const canEditProject = isCreator || projectRole === 'SCRUM_MASTER' || projectRole === 'PRODUCT_OWNER';
 
-                        // If they can't edit and aren't the creator, don't even show the ⋮ button!
                         if (!canEditProject && !isCreator) return null;
 
                         return (
@@ -608,7 +565,6 @@ const ProjectDashboard = () => {
         </div>
       </main>
 
-      {/* --- CREATE / EDIT PROJECT MODAL --- */}
       {isModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -638,7 +594,6 @@ const ProjectDashboard = () => {
         </div>
       )}
 
-      {/* --- ACCOUNT SETTINGS / UPDATE USER MODAL --- */}
       {isProfileModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content profile-modal">

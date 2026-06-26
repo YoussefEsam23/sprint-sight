@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import '../styling/NotificationBell.css'; // <-- Import the new CSS!
+import '../styling/NotificationBell.css'; 
 
 const NotificationBell = ({ onInviteAccepted }) => {
   const [isOpen, setIsOpen] = useState(false);

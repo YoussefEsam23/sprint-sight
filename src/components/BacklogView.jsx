@@ -3,27 +3,23 @@ import { useParams } from 'react-router-dom';
 import { createPortal } from 'react-dom'; 
 import '../styling/BacklogView.css';
 
-// Custom Components
 import CustomDropdown from './CustomDropdown';
-import MultiSelectDropdown from './MultiSelectDropdown'; // <-- New Import
+import MultiSelectDropdown from './MultiSelectDropdown'; 
 import IssueComments from './IssueComments';
-import { Doc } from 'zod/v4/core';
 
 const BacklogView = () => {
   const { projectId } = useParams(); 
   
-  // --- REAL BACKEND STATES ---
   const [issues, setIssues] = useState([]);
   const [types, setTypes] = useState([]);
   const [priorities, setPriorities] = useState([]);
   const [statuses, setStatuses] = useState([]);
   const [members, setMembers] = useState([]);
-  const [projectComponents, setProjectComponents] = useState([]); // <-- New State
+  const [projectComponents, setProjectComponents] = useState([]); 
   
   const [isLoading, setIsLoading] = useState(true);
   const [openMenuId, setOpenMenuId] = useState(null);
   
-  // --- MODAL STATES ---
   const [editingIssueId, setEditingIssueId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false); 
   const [viewingIssue, setViewingIssue] = useState(null); 
@@ -31,10 +27,9 @@ const BacklogView = () => {
   const [formErrors, setFormErrors] = useState({});
   const [formData, setFormData] = useState({ 
     title: '', description: '', typeId: '', priorityId: '', statusId: '', storyPoints: '', assignedTo: '',
-    componentIds: [] // <-- New Array for Multiple Components
+    componentIds: [] 
   });
 
-  // --- GET CURRENT USER ROLE ---
   const storedUser = JSON.parse(localStorage.getItem('sprintSightUser')) || {};
   const currentUserId = storedUser.id;
   const myRecord = members.find(m => m.member.id === currentUserId);
@@ -56,7 +51,6 @@ const BacklogView = () => {
         'Content-Type': 'application/json'
       };
 
-      // Added components fetch to the Promise.all
       const [issuesRes, typesRes, prioritiesRes, statusesRes, membersRes, componentsRes] = await Promise.all([
         fetch(`/api/projects/${projectId}/issues`, { headers }),
         fetch(`/api/projects/${projectId}/configurations/types`, { headers }),
@@ -94,7 +88,6 @@ const BacklogView = () => {
     setOpenMenuId(openMenuId === id ? null : id); 
   };
 
-  // --- OPENS THE EDIT / CREATE FORM ---
   const openIssueModal = (issue = null) => {
     setViewingIssue(null); 
     if (issue) {
@@ -107,7 +100,7 @@ const BacklogView = () => {
         statusId: issue.status?.id || statuses[0]?.id || '', 
         storyPoints: issue.storyPoints || '', 
         assignedTo: issue.assignedTo?.id || '',
-        componentIds: issue.components ? issue.components.map(c => c.id) : [] // Map existing components
+        componentIds: issue.components ? issue.components.map(c => c.id) : [] 
       });
     } else {
       setEditingIssueId(null);
@@ -121,7 +114,7 @@ const BacklogView = () => {
         priorityId: defaultPriority?.id || '', 
         statusId: defaultStatus?.id || '', 
         storyPoints: '', assignedTo: '',
-        componentIds: [] // Empty for new issues
+        componentIds: [] 
       });
     }
     setFormErrors({}); 
@@ -159,7 +152,7 @@ const BacklogView = () => {
       priorityId: formData.priorityId,
       storyPoints: formData.storyPoints ? parseInt(formData.storyPoints) : null,
       assignedTo: formData.assignedTo || null,
-      componentIds: formData.componentIds // Include components in payload
+      componentIds: formData.componentIds
     };
 
     if (editingIssueId && formData.statusId) payload.statusId = formData.statusId;
@@ -206,29 +199,25 @@ const BacklogView = () => {
         ) : (
           <div className="story-list">
             {issues.map(issue => (
-              <div key={issue.id} className="story-card" style={{ zIndex: openMenuId === issue.id ? 50 : 1 }} onClick={() => setViewingIssue(issue)}>
+              <div key={issue.id} className={`story-card ${openMenuId === issue.id ? 'bv-card-top' : ''}`} onClick={() => setViewingIssue(issue)}>
                 <div className="story-info">
-                  <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px'}}>
-                    <span style={{fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--accent-color)', textTransform: 'uppercase'}}>
+                  <div className="bv-issue-header-row">
+                    <span className="bv-issue-type">
                       {issue.type?.name || 'Issue'}
                     </span>
-                   {/*  <span className="story-id" style={{fontSize: '0.75rem'}}>
-                      #{issue.id?.substring(0, 6)}
-                    </span> */}
                   </div>
                   
                   <h3 className="story-title">{issue.title}</h3>
                   {issue.description && <p className="story-desc">{issue.description}</p>}
                   
                   <div className="bv-story-meta">
-                    {/* Display Components on Card if available */}
                     {issue.components && issue.components.length > 0 && (
-                      <span className="bv-badge" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', color: 'var(--accent-color)' }}>
+                      <span className="bv-badge bv-badge-components">
                         🧩 {issue.components.map(c => c.name).join(', ')}
                       </span>
                     )}
                     {issue.assignedTo && <span className="bv-badge">👤 {issue.assignedTo.username}</span>}
-                    {issue.status && <span>Status: <strong className="bv-badge-highlight" style={{background: 'none', padding: 0}}>{issue.status.name}</strong></span>}
+                    {issue.status && <span>Status: <strong className="bv-badge-highlight bv-badge-no-bg">{issue.status.name}</strong></span>}
                     {issue.priority && <span>Priority: <strong>{issue.priority.name}</strong></span>}
                     {issue.storyPoints !== null && <span className="bv-badge">Points: {issue.storyPoints}</span>}
                   </div>
@@ -239,7 +228,7 @@ const BacklogView = () => {
                   {openMenuId === issue.id && (
                     <div className="bv-dropdown-menu">
                       <button type="button" className="bv-dropdown-item" onClick={(e) => { e.stopPropagation(); openIssueModal(issue); }}>✏️ Edit Issue</button>
-                      <button type="button" className="bv-dropdown-item" style={{color: '#e74c3c'}} onClick={(e) => handleDeleteIssue(e, issue.id)}>🗑️ Delete Issue</button>
+                      <button type="button" className="bv-dropdown-item bv-text-danger" onClick={(e) => handleDeleteIssue(e, issue.id)}>🗑️ Delete Issue</button>
                     </div>
                   )}
                 </div>
@@ -257,45 +246,40 @@ const BacklogView = () => {
       </div>
 
       {/* ======================================================== */}
-      {/* MODAL 1: VIEW DETAILS & COMMENTS (Triggered by Card Click) */}
+      {/* MODAL 1: VIEW DETAILS & COMMENTS                         */}
       {/* ======================================================== */}
       {viewingIssue && createPortal(
         <div className="bv-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setViewingIssue(null); }}>
           <div className="bv-view-modal">
             
-            {/* LEFT SIDE: Issue Details */}
             <div className="bv-view-left">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--accent-color)', textTransform: 'uppercase' }}>
+              <div className="bv-view-meta-header">
+                <span className="bv-view-meta-label">
                   {viewingIssue.type?.name || 'Issue'}
                 </span>
-                {/* <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                  #{viewingIssue.id?.substring(0, 6)}
-                </span> */}
               </div>
               
-              <h2 style={{ margin: '0 0 1.5rem 0', fontSize: '1.8rem', color: 'var(--text-main)', lineHeight: '1.2' }}>
+              <h2 className="bv-view-title-text">
                 {viewingIssue.title}
               </h2>
               
-              <div style={{ marginBottom: '2rem' }}>
-                <h4 style={{ color: 'var(--text-muted)', marginBottom: '0.5rem', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Description</h4>
-                <p style={{ color: 'var(--text-main)', lineHeight: '1.6', whiteSpace: 'pre-wrap', backgroundColor: 'var(--bg-main)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                  {viewingIssue.description || <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No description provided.</span>}
+              <div className="bv-view-section">
+                <h4 className="bv-view-section-title">Description</h4>
+                <p className="bv-view-desc-text">
+                  {viewingIssue.description || <span style={{ fontStyle: 'italic', color: 'var(--text-muted)' }}>No description provided.</span>}
                 </p>
               </div>
 
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
-                {/* Show components in the view modal */}
+              <div className="bv-view-badges-row">
                 {viewingIssue.components && viewingIssue.components.length > 0 && (
-                  <span className="bv-badge" style={{ fontSize: '0.9rem', padding: '6px 12px', backgroundColor: 'rgba(245, 158, 11, 0.1)', color: 'var(--accent-color)' }}>
+                  <span className="bv-badge bv-badge-components bv-badge-lg">
                     🧩 {viewingIssue.components.map(c => c.name).join(', ')}
                   </span>
                 )}
-                {viewingIssue.assignedTo && <span className="bv-badge" style={{ fontSize: '0.9rem', padding: '6px 12px' }}>👤 Assignee: <strong>{viewingIssue.assignedTo.fullName || viewingIssue.assignedTo.username}</strong></span>}
-                {viewingIssue.status && <span className="bv-badge" style={{ fontSize: '0.9rem', padding: '6px 12px' }}>Status: <strong className="bv-badge-highlight" style={{background: 'none', padding: 0}}>{viewingIssue.status.name}</strong></span>}
-                {viewingIssue.priority && <span className="bv-badge" style={{ fontSize: '0.9rem', padding: '6px 12px' }}>Priority: <strong>{viewingIssue.priority.name}</strong></span>}
-                {viewingIssue.storyPoints !== null && <span className="bv-badge" style={{ fontSize: '0.9rem', padding: '6px 12px' }}>Story Points: <strong>{viewingIssue.storyPoints}</strong></span>}
+                {viewingIssue.assignedTo && <span className="bv-badge bv-badge-lg">👤 Assignee: <strong>{viewingIssue.assignedTo.fullName || viewingIssue.assignedTo.username}</strong></span>}
+                {viewingIssue.status && <span className="bv-badge bv-badge-lg">Status: <strong className="bv-badge-highlight bv-badge-no-bg">{viewingIssue.status.name}</strong></span>}
+                {viewingIssue.priority && <span className="bv-badge bv-badge-lg">Priority: <strong>{viewingIssue.priority.name}</strong></span>}
+                {viewingIssue.storyPoints !== null && <span className="bv-badge bv-badge-lg">Story Points: <strong>{viewingIssue.storyPoints}</strong></span>}
               </div>
 
               <div className="bv-modal-actions">
@@ -304,7 +288,6 @@ const BacklogView = () => {
               </div>
             </div>
 
-            {/* RIGHT SIDE: Comments */}
             <div className="bv-view-right">
               <IssueComments issueId={viewingIssue.id} currentUserRole={currentUserRole} />
             </div>
@@ -315,7 +298,7 @@ const BacklogView = () => {
       )}
 
       {/* ======================================================== */}
-      {/* MODAL 2: EDIT/CREATE FORM (Triggered by Buttons)           */}
+      {/* MODAL 2: EDIT/CREATE FORM                                  */}
       {/* ======================================================== */}
       {isModalOpen && createPortal(
         <div className="bv-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setIsModalOpen(false); }}>
@@ -327,7 +310,7 @@ const BacklogView = () => {
                 <div className="bv-text-input-container">
                   <div className="bv-form-group">
                     <label>Issue Title</label>
-                    <input type="text" className="bv-modal-input " placeholder="e.g., Integrate Payment Gateway" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} />
+                    <input type="text" className="bv-modal-input" placeholder="e.g., Integrate Payment Gateway" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} />
                     {formErrors.title && <span className="bv-form-error">{formErrors.title}</span>}
                   </div>
                   
@@ -411,14 +394,6 @@ const BacklogView = () => {
         </div>,
         document.body 
       )}
-
-       {/* {(() => {
-        if(issues.length===0)
-        {
-          document.querySelector(".story-list").classList.remove("story-list");
-        }
-      })()} */}
-
     </>
   );
 };

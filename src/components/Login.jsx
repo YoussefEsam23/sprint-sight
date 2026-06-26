@@ -7,7 +7,6 @@ import '../styling/Login.css';
 import logoLight from '/sprint-sight-logo.png';
 import logoDark from '/sprint-sight-logo-dark.png';
 
-// --- 1. UPDATED VALIDATION SCHEMAS ---
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
@@ -50,10 +49,9 @@ const Login = () => {
     mode: "onChange"
   });
 
-    const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    const logoSrc = isDark ? logoDark : logoLight;
+  const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const logoSrc = isDark ? logoDark : logoLight;
 
-  // Theme Logic
   useEffect(() => {
     const applyTheme = (selectedTheme) => {
       if (selectedTheme === 'system') {
@@ -84,7 +82,6 @@ const Login = () => {
     return '💻';
   };
 
-  // --- REAL API SUBMISSION LOGIC ---
   const onSubmit = async (data) => {
     setIsLoading(true);
     setMessage('');
@@ -93,11 +90,9 @@ const Login = () => {
     try {
       const token = localStorage.getItem('sprintSightToken');
       if (isLoginView) {
-        // --- LOGIN API CALL ---
-
         const response = await fetch(`api/auth/login`, {
           method: 'POST',
-          credentials: 'include', // Fixed: This belongs outside the body
+          credentials: 'include',
           headers: { 
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
@@ -123,15 +118,13 @@ const Login = () => {
           setMessage(result.message || 'Invalid username or password.');
         }
       } else {
-
-        // --- 2. UPDATED SIGNUP API CALL ---
         const response = await fetch(`api/auth/signup`, {
           method: 'POST',
-          credentials: 'include', // Fixed: Ensure cookies work for CORS
+          credentials: 'include',
           headers: { 
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
-            'X-XSRF-TOKEN': getCookie('XSRF-TOKEN') // Included just in case your backend requires it for signup too
+            'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')
           },
           body: JSON.stringify({
             fullName: data.fullName,
@@ -147,10 +140,9 @@ const Login = () => {
           reset();
           setIsError(false);
           setMessage('Account created successfully! Please log in.');
-          setIsLoginView(true); // Flip back to the login screen
+          setIsLoginView(true); 
         } else {
           setIsError(true);
-          // Safely extract the backend error message if they sent one
           setMessage(result.message || result.error || 'Failed to create account. Username or Email might be taken.');
         }
       }
@@ -193,17 +185,16 @@ const Login = () => {
             onError={(e) => { e.target.onerror = null; }}
           />
           <h1 className="app-title">Sprint Sight</h1>
-          <h3 style={{ color: 'var(--text-main)', marginTop: '1rem', fontWeight: '600', transition: 'color var(--transition-fast)' }}>
+          <h3 className="login-subtitle">
             {isLoginView ? 'Welcome Back' : 'Create an Account'}
           </h3>
         </div>
 
         <form className="login-form" onSubmit={handleSubmit(onSubmit)}>
           
-          {/* --- NEW: EXTRA FIELDS FOR SIGN UP ONLY --- */}
           {!isLoginView && (
             <>
-              <div className="input-group" style={{ width: '100%' }}>
+              <div className="input-group">
                 <input
                   type="text"
                   placeholder="Full Name"
@@ -213,7 +204,7 @@ const Login = () => {
                 {errors.fullName && <span className="error-text">{errors.fullName.message}</span>}
               </div>
 
-              <div className="input-group" style={{ width: '100%' }}>
+              <div className="input-group">
                 <input
                   type="email"
                   placeholder="Email Address"
@@ -225,8 +216,7 @@ const Login = () => {
             </>
           )}
 
-          {/* --- ALWAYS VISIBLE FIELDS --- */}
-          <div className="input-group" style={{ width: '100%' }}>
+          <div className="input-group">
             <input
               type="text"
               placeholder="Username"
@@ -236,7 +226,7 @@ const Login = () => {
             {errors.username && <span className="error-text">{errors.username.message}</span>}
           </div>
 
-          <div className="input-group" style={{ width: '100%' }}>
+          <div className="input-group">
             <div className="password-input-container">
               <input
                 type={showPassword ? "text" : "password"}
@@ -256,16 +246,13 @@ const Login = () => {
           </div>
 
           {message && (
-            <p style={{ color: isError ? '#e74c3c' : '#2ecc71', fontWeight: '600', marginBottom: '1rem', textAlign: 'center' }}>
+            <p className={`login-message ${isError ? 'message-error' : 'message-success'}`}>
               {message}
             </p>
           )}
 
           <button type="submit" className="btn btn-login" disabled={isLoading}>
-            {isLoading
-              ? 'Please wait...'
-              : (isLoginView ? 'Login' : 'Create Account')
-            }
+            {isLoading ? 'Please wait...' : (isLoginView ? 'Login' : 'Create Account')}
           </button>
         </form>
 

@@ -1,0 +1,71 @@
+/* =========================================
+   MULTI-SELECT DROPDOWN (msd-)
+   ========================================= */
+
+.msd-container {
+  width: 100%;
+  position: relative;
+  display: inline-block;
+}
+
+.msd-button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.msd-button:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+}
+
+.msd-menu {
+  width: 100%;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 99999;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  margin-top: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.msd-empty {
+  padding: 10px 12px;
+  color: var(--text-muted);
+}
+
+.msd-item {
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.msd-item:hover {
+  background-color: var(--bg-hover);
+}
+
+.msd-checkbox {
+  cursor: pointer;
+  accent-color: var(--accent-color);
+}

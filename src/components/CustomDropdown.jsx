@@ -42,42 +42,25 @@ const CustomDropdown = ({ currentValue, options, onChange, readOnlyLabel }) => {
   }
 
   return (
-    <div className="custom-dropdown-container" ref={dropdownRef} style={{ width: '100%', position: 'relative' }}>
+    <div className="custom-dropdown-container" ref={dropdownRef}>
       <button
         type="button"
         className="custom-dropdown-button"
         onClick={() => setIsOpen(!isOpen)}
-        style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
       >
         <span>{displayValue}</span> <span className="dropdown-arrow">▼</span>
       </button>
 
       {isOpen && (
-        <div 
-          className="custom-dropdown-menu" 
-          style={{ 
-            width: '100%', 
-            position: 'absolute', 
-            top: '100%', 
-            left: 0,
-            zIndex: 99999, 
-            backgroundColor: 'var(--bg-card, #1E293B)', 
-            border: '1px solid var(--border-color, #334155)',
-            borderRadius: '8px',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.6)',
-            marginTop: '4px',
-            maxHeight: '220px',
-            overflowY: 'auto'
-          }}
-        >
+        <div className="custom-dropdown-menu">
           {readOnlyLabel && (
-            <div className="custom-dropdown-readonly" style={{ padding: '10px 12px', opacity: 0.6, fontStyle: 'italic', borderBottom: '1px solid var(--border-color)' }}>
+            <div className="custom-dropdown-readonly">
               {getLabel(readOnlyLabel)} (Current)
             </div>
           )}
           
           {options.length === 0 ? (
-            <div style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>
+            <div className="custom-dropdown-empty">
               No options available
             </div>
           ) : (
