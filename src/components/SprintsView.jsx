@@ -31,13 +31,17 @@ const SprintsView = () => {
   const [isAddStoryModalOpen, setIsAddStoryModalOpen] = useState(false);
   const [targetSprintId, setTargetSprintId] = useState(null);
   const [selectedIssueIds, setSelectedIssueIds] = useState([]);
-  const [expandedGroups, setExpandedGroups] = useState({}); // <-- NEW: Tracks open component folders
+  const [expandedGroups, setExpandedGroups] = useState({}); 
   
   const [isStartModalOpen, setIsStartModalOpen] = useState(false);
   const [isCloseModalOpen, setIsCloseModalOpen] = useState(false);
   const [activeSprintData, setActiveSprintData] = useState(null);
   const [startDates, setStartDates] = useState({ startDate: '', endDate: '' });
   const [moveUnfinishedTo, setMoveUnfinishedTo] = useState('');
+
+  // --- NEW AI PREDICTION STATES ---
+  const [predictionData, setPredictionData] = useState(null);
+  const [isPredicting, setIsPredicting] = useState(false);
 
   const [viewingIssue, setViewingIssue] = useState(null); 
   const [editingIssueId, setEditingIssueId] = useState(null);
@@ -135,8 +139,11 @@ const SprintsView = () => {
     if (viewingSprint) {
       const updatedSprint = sprints.find(s => s.id === viewingSprint.id);
       if (updatedSprint) setViewingSprint(updatedSprint);
+    } else {
+      // Clear AI prediction data when closing the modal
+      setPredictionData(null);
     }
-  }, [sprints]);
+  }, [sprints, viewingSprint]);
 
   useEffect(() => {
     if (viewingIssue) {
@@ -153,14 +160,12 @@ const SprintsView = () => {
     try {
       const url = editingSprintId ? `/api/projects/${projectId}/sprints/${editingSprintId}` : `/api/projects/${projectId}/sprints`;
       const method = editingSprintId ? 'PUT' : 'POST';
-      
-      const today = new Date();
+      const todayStr = new Date().toISOString().split('T')[0];
 
       const payload = {
-        name: sprintFormData.name, 
-        goal: sprintFormData.goal,
-        startDate: sprintFormData.startDate ? new Date(sprintFormData.startDate).toISOString() : today.toISOString(),
-        endDate: sprintFormData.endDate ? new Date(sprintFormData.endDate).toISOString() : null // <-- Send null if not set
+        name: sprintFormData.name, goal: sprintFormData.goal,
+        startDate: sprintFormData.startDate || todayStr,
+        endDate: sprintFormData.endDate || null
       };
 
       const response = await fetch(url, { method, headers: getAuthHeaders(), body: JSON.stringify(payload) });
@@ -182,13 +187,11 @@ const SprintsView = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const today = new Date();
-
+      const todayStr = new Date().toISOString().split('T')[0];
       const payload = { 
-        startDate: startDates.startDate ? new Date(startDates.startDate).toISOString() : today.toISOString(), 
-        endDate: startDates.endDate ? new Date(startDates.endDate).toISOString() : null // <-- Send null if not set
+        startDate: startDates.startDate || todayStr, 
+        endDate: startDates.endDate || null 
       };
-
       const response = await fetch(`/api/projects/${projectId}/sprints/${activeSprintData.id}/start`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify(payload) });
       if (response.ok) { await fetchSprintsData(); setIsStartModalOpen(false); }
       else { alert(`Failed to start sprint: ${(await response.json()).message}`); }
@@ -199,19 +202,36 @@ const SprintsView = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const payload = { 
-        moveUnfinishedToSprintId: moveUnfinishedTo === '' ? null : moveUnfinishedTo 
-      };
-
-      // --- NEW: If sprint has no end date, capture system date and send in payload ---
+      const payload = { moveUnfinishedToSprintId: moveUnfinishedTo === '' ? null : moveUnfinishedTo };
+      
       if (!activeSprintData.endDate) {
-        payload.endDate = new Date().toISOString();
+        payload.endDate = new Date().toISOString().split('T')[0];
       }
 
       const response = await fetch(`/api/projects/${projectId}/sprints/${activeSprintData.id}/close`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify(payload) });
       if (response.ok) { await fetchSprintsData(); setIsCloseModalOpen(false); }
       else { alert(`Failed to close sprint: ${(await response.json()).message}`); }
     } catch (error) { console.error(error); } finally { setIsSubmitting(false); }
+  };
+
+  // --- NEW AI PREDICTION FUNCTION ---
+  const handleGetPrediction = async (sprintId) => {
+    setIsPredicting(true);
+    try {
+      const response = await fetch(`/api/projects/${projectId}/sprints/${sprintId}/prediction`, {
+        headers: getAuthHeaders()
+      });
+      if (response.ok) {
+        const result = await response.json();
+        setPredictionData(result.data);
+      } else {
+        alert("Failed to fetch AI prediction. Ensure the backend AI service is running.");
+      }
+    } catch (error) {
+      console.error("AI Prediction Error:", error);
+    } finally {
+      setIsPredicting(false);
+    }
   };
 
   const handleSaveAssignedStories = async (e) => {
@@ -238,7 +258,6 @@ const SprintsView = () => {
 
   const toggleIssueSelection = (issueId) => { setSelectedIssueIds(prev => prev.includes(issueId) ? prev.filter(id => id !== issueId) : [...prev, issueId]); };
   
-  // --- NEW: Reset expanded folders when modal opens ---
   const openAddStoryModal = (sprintId) => { 
     setTargetSprintId(sprintId); 
     setSelectedIssueIds([]); 
@@ -311,7 +330,6 @@ const SprintsView = () => {
   const unassignedIssues = allIssues.filter(issue => !assignedIssueIds.has(issue.id));
   const otherPlanningSprints = sprints.filter(s => s.status === 'PLANNING' && s.id !== activeSprintData?.id);
 
-  // --- NEW: Group Unassigned Issues by Component ---
   const issuesByComponent = {};
   unassignedIssues.forEach(issue => {
     if (!issue.components || issue.components.length === 0) {
@@ -326,7 +344,7 @@ const SprintsView = () => {
   });
 
   const groupedIssuesArray = Object.values(issuesByComponent).sort((a, b) => {
-    if (a.id === 'none') return 1; // Always push "No Component Assigned" to bottom
+    if (a.id === 'none') return 1; 
     if (b.id === 'none') return -1;
     return a.name.localeCompare(b.name);
   });
@@ -381,7 +399,7 @@ const SprintsView = () => {
                        <button onClick={(e) => { e.stopPropagation(); setActiveSprintData(sprint); setStartDates({ startDate: formatInputDate(getSprintStart(sprint)), endDate: formatInputDate(getSprintEnd(sprint))}); setIsStartModalOpen(true); }} className="sv-btn-start">▶ Start Sprint</button>
                      )}
                      {canManageSprints && sprint.status === 'ACTIVE' && (
-                       <button onClick={(e) => { e.stopPropagation(); setActiveSprintData(sprint); setMoveUnfinishedTo(''); setIsCloseModalOpen(true); }} className="sv-btn-complete">Complete Sprint</button>
+                       <button onClick={(e) => { e.stopPropagation(); setActiveSprintData(sprint); setMoveUnfinishedTo(''); setIsCloseModalOpen(true); }} className="sv-btn-complete">🏁 Complete Sprint</button>
                      )}
                      {canManageSprints && (
                        <button onClick={(e) => { e.stopPropagation(); openAddStoryModal(sprint.id); }} className="sv-add-issues-btn">+ Add Issues</button>
@@ -441,7 +459,7 @@ const SprintsView = () => {
       </div>
 
       {/* ======================================================== */}
-      {/* MODAL 1: VIEW SPRINT DETAILS                               */}
+      {/* MODAL 1: VIEW SPRINT DETAILS (WITH AI INTEGRATION)         */}
       {/* ======================================================== */}
       {viewingSprint && createPortal(
         <div className="sv-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setViewingSprint(null); }}>
@@ -462,6 +480,40 @@ const SprintsView = () => {
                 <span className="sv-modal-date-badge">Start: <strong>{formatDisplayDate(getSprintStart(viewingSprint))}</strong></span>
                 <span className="sv-modal-date-badge">End: <strong>{formatDisplayDate(getSprintEnd(viewingSprint))}</strong></span>
               </div>
+
+              {/* --- NEW ✨ AI INSIGHTS SECTION --- */}
+              <div className="sv-modal-section">
+                <h4 className="sv-modal-section-title">✨ AI Insights</h4>
+                
+                {!predictionData ? (
+                  <button 
+                    className="sv-btn-ai" 
+                    onClick={() => handleGetPrediction(viewingSprint.id)} 
+                    disabled={isPredicting}
+                  >
+                    {isPredicting ? '🧠 Analyzing Sprint Data...' : 'Predict Sprint Outcome'}
+                  </button>
+                ) : (
+                  <div className="sv-ai-card">
+                    <div className="sv-ai-metric">
+                      <span className="sv-ai-label">Predicted Productivity</span>
+                      <div className="sv-ai-bar-bg">
+                        <div className="sv-ai-bar-fill" style={{ width: `${predictionData.productivity}%` }}></div>
+                      </div>
+                      <span className="sv-ai-value">{predictionData.productivityLabel} ({predictionData.productivity.toFixed(1)}%)</span>
+                    </div>
+
+                    <div className="sv-ai-metric">
+                      <span className="sv-ai-label">Predicted Quality</span>
+                      <div className="sv-ai-bar-bg">
+                        <div className="sv-ai-bar-fill" style={{ width: `${predictionData.quality}%` }}></div>
+                      </div>
+                      <span className="sv-ai-value">{predictionData.qualityLabel} ({predictionData.quality.toFixed(1)}%)</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="sv-modal-actions sv-view-actions">
                 <button className="sv-btn sv-cancel-btn" onClick={() => setViewingSprint(null)}>Close</button>
               </div>
@@ -667,7 +719,9 @@ const SprintsView = () => {
                 </div>
               <div className="bv-modal-actions">
                 <button type="button" disabled={isSubmitting} className="bv-btn bv-cancel-btn" onClick={() => setIsIssueModalOpen(false)}>Cancel</button>
-                
+                {editingIssueId && canManageSprints && (
+                  <button type="button" disabled={isSubmitting} className="bv-btn sv-btn-delete-left" onClick={(e) => handleDeleteIssue(e, editingIssueId)}>Delete Global Issue</button>
+                )}
                 <button type="submit" disabled={isSubmitting} className="bv-btn bv-save-btn">{isSubmitting ? 'Saving...' : 'Save Changes'}</button>
               </div>
             </form>
@@ -689,8 +743,8 @@ const SprintsView = () => {
             </p>
             <form className="sv-modal-form" onSubmit={handleStartSprint}>
               <div className="sv-form-row">
-                <div className="sv-form-group"><label>Start Date</label><input type="date" className="sv-modal-input" value={startDates.startDate} onChange={(e) => setStartDates({...startDates, startDate: e.target.value})} /><p className="sv-startdate-note">Leave empty to take current date</p></div>
-                <div className="sv-form-group"><label>End Date</label><input type="date" className="sv-modal-input" value={startDates.endDate} onChange={(e) => setStartDates({...startDates, endDate: e.target.value})} /></div>
+                <div className="sv-form-group"><label>Start Date</label><input type="date" className="sv-modal-input" value={startDates.startDate} onChange={(e) => setStartDates({...startDates, startDate: e.target.value})} required/></div>
+                <div className="sv-form-group"><label>End Date</label><input type="date" className="sv-modal-input" value={startDates.endDate} onChange={(e) => setStartDates({...startDates, endDate: e.target.value})} required/></div>
               </div>
               <div className="sv-modal-actions">
                 <button type="button" disabled={isSubmitting} className="sv-btn sv-cancel-btn" onClick={() => setIsStartModalOpen(false)}>Cancel</button>
@@ -706,56 +760,55 @@ const SprintsView = () => {
       {/* MODAL 5: COMPLETE SPRINT                                   */}
       {/* ======================================================== */}
       {isCloseModalOpen && activeSprintData && createPortal(
-  <div className="sv-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setIsCloseModalOpen(false); }}>
-    <div className="sv-modal-content">
-      <h2 className="sv-modal-title">Complete Sprint: {activeSprintData.name}</h2>
-      
-      {(() => {
-        const activeIssues = (activeSprintData.issues || []).filter(item => !item.removedAt);
-        const completedCount = activeIssues.filter(item => item.issue.status?.isCompleted || item.issue.status?.name?.toLowerCase() === 'done').length;
-        const unfinishedCount = activeIssues.length - completedCount;
+        <div className="sv-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setIsCloseModalOpen(false); }}>
+          <div className="sv-modal-content">
+            <h2 className="sv-modal-title">Complete Sprint: {activeSprintData.name}</h2>
+            
+            {(() => {
+              const activeIssues = (activeSprintData.issues || []).filter(item => !item.removedAt);
+              const completedCount = activeIssues.filter(item => item.issue.status?.isCompleted || item.issue.status?.name?.toLowerCase() === 'done').length;
+              const unfinishedCount = activeIssues.length - completedCount;
 
-        // Prepare options for the CustomDropdown
-        const dropdownOptions = [
-          { value: '', label: 'Move to Backlog' },
-          ...otherPlanningSprints.map(s => ({ value: s.id, label: `Move to: ${s.name}` }))
-        ];
+              const dropdownOptions = [
+                { value: '', label: 'Move to Backlog' },
+                ...otherPlanningSprints.map(s => ({ value: s.id, label: `Move to: ${s.name}` }))
+              ];
 
-        return (
-          <form className="sv-modal-form" onSubmit={handleCompleteSprint}>
-            <div className="sv-complete-metrics-row">
-              <div className="sv-complete-metric-box sv-metric-success-box">
-                <h3 className="sv-complete-metric-value sv-metric-success-text">{completedCount}</h3>
-                <span className="sv-complete-metric-label">Completed Issues</span>
-              </div>
-              <div className="sv-complete-metric-box sv-metric-danger-box">
-                <h3 className="sv-complete-metric-value sv-metric-danger-text">{unfinishedCount}</h3>
-                <span className="sv-complete-metric-label">Unfinished Issues</span>
-              </div>
-            </div>
+              return (
+                <form className="sv-modal-form" onSubmit={handleCompleteSprint}>
+                  <div className="sv-complete-metrics-row">
+                    <div className="sv-complete-metric-box sv-metric-success-box">
+                      <h3 className="sv-complete-metric-value sv-metric-success-text">{completedCount}</h3>
+                      <span className="sv-complete-metric-label">Completed Issues</span>
+                    </div>
+                    <div className="sv-complete-metric-box sv-metric-danger-box">
+                      <h3 className="sv-complete-metric-value sv-metric-danger-text">{unfinishedCount}</h3>
+                      <span className="sv-complete-metric-label">Unfinished Issues</span>
+                    </div>
+                  </div>
 
-            {unfinishedCount > 0 && (
-              <div className="sv-form-group sv-mb-1">
-                <label>Where should the {unfinishedCount} unfinished issues go?</label>
-                <CustomDropdown 
-                  currentValue={moveUnfinishedTo}
-                  options={dropdownOptions}
-                  onChange={(val) => setMoveUnfinishedTo(val)}
-                />
-              </div>
-            )}
+                  {unfinishedCount > 0 && (
+                    <div className="sv-form-group sv-mb-1">
+                      <label>Where should the {unfinishedCount} unfinished issues go?</label>
+                      <CustomDropdown 
+                        currentValue={moveUnfinishedTo}
+                        options={dropdownOptions}
+                        onChange={(val) => setMoveUnfinishedTo(val)}
+                      />
+                    </div>
+                  )}
 
-            <div className="sv-modal-actions">
-              <button type="button" disabled={isSubmitting} className="sv-btn sv-cancel-btn" onClick={() => setIsCloseModalOpen(false)}>Cancel</button>
-              <button type="submit" disabled={isSubmitting} className="sv-btn sv-save-btn sv-btn-save-complete">{isSubmitting ? 'Completing...' : 'Complete Sprint'}</button>
-            </div>
-          </form>
-        );
-      })()}
-    </div>
-  </div>,
-  document.body
-)}
+                  <div className="sv-modal-actions">
+                    <button type="button" disabled={isSubmitting} className="sv-btn sv-cancel-btn" onClick={() => setIsCloseModalOpen(false)}>Cancel</button>
+                    <button type="submit" disabled={isSubmitting} className="sv-btn sv-save-btn sv-btn-save-complete">{isSubmitting ? 'Completing...' : 'Complete Sprint'}</button>
+                  </div>
+                </form>
+              );
+            })()}
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* ======================================================== */}
       {/* MODAL 6: CREATE/EDIT SPRINT FORM                           */}
@@ -774,8 +827,8 @@ const SprintsView = () => {
                 <textarea className="sv-modal-input sv-textarea-sm" placeholder="What is the main objective of this sprint?" value={sprintFormData.goal} onChange={(e) => setSprintFormData({...sprintFormData, goal: e.target.value})} />
               </div>
               <div className="sv-form-row">
-                <div className="sv-form-group"><label>Start Date</label><input type="date" className="sv-modal-input" value={sprintFormData.startDate} onChange={(e) => setSprintFormData({...sprintFormData, startDate: e.target.value})} /></div>
-                <div className="sv-form-group"><label>End Date</label><input type="date" className="sv-modal-input" value={sprintFormData.endDate} onChange={(e) => setSprintFormData({...sprintFormData, endDate: e.target.value})} /></div>
+                <div className="sv-form-group"><label>Start Date</label><input type="date" className="sv-modal-input" value={sprintFormData.startDate} onChange={(e) => setSprintFormData({...sprintFormData, startDate: e.target.value})} required/></div>
+                <div className="sv-form-group"><label>End Date</label><input type="date" className="sv-modal-input" value={sprintFormData.endDate} onChange={(e) => setSprintFormData({...sprintFormData, endDate: e.target.value})} required/></div>
               </div>
               <div className="sv-modal-actions">
                 <button type="button" disabled={isSubmitting} className="sv-btn sv-cancel-btn" onClick={() => setIsSprintModalOpen(false)}>Cancel</button>

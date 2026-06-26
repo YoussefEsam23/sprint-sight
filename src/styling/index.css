@@ -42,6 +42,7 @@ body {
   --transition-fast: 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   --transition-smooth: 0.4s cubic-bezier(0.25, 1, 0.5, 1);
   --transition-bounce: 0.5s cubic-bezier(0.68, -0.55, 0.26, 1.55);
+  --active-sprint : #0e9f6e; 
 }
 
 [data-theme="dark"] {
@@ -64,6 +65,7 @@ body {
   --btn-text: #0d1117; /* Dark text on bright yellow buttons */
   --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   --glow-display: block;
+--active-sprint :  #10B981;
 }
 
 @keyframes fadeInUp {
