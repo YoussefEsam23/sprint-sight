@@ -6,6 +6,7 @@ import BacklogView from './BacklogView';
 import SprintsView from './SprintsView';
 import TeamView from './TeamView'; 
 import ComponentsView from './ComponentsView'; 
+import HistoryView from './HistoryView'; // <-- NEW IMPORT
 
 import NotificationBell from './NotificationBell';
 import UserProfile from './UserProfile';
@@ -94,6 +95,7 @@ const HomePage = () => {
     if (activeTab === 'backlog') return 'Main Dashboard';
     if (activeTab === 'sprints') return 'Active Sprints';
     if (activeTab === 'components') return 'Project Components'; 
+    if (activeTab === 'history') return 'Project History'; // <-- NEW BREADCRUMB
     if (activeTab === 'team') return 'Team Management';
     return '';
   };
@@ -114,6 +116,10 @@ const HomePage = () => {
               <li><button className={`nav-item ${activeTab === 'sprints' ? 'active' : ''}`} onClick={() => setActiveTab('sprints')}><span className="icon">⚏</span> Active Sprints</button></li>
               <li className="nav-divider"></li>
               <li><button className={`nav-item ${activeTab === 'components' ? 'active' : ''}`} onClick={() => setActiveTab('components')}>Components</button></li>
+              
+              {/* --- NEW HISTORY BUTTON --- */}
+              <li><button className={`nav-item ${activeTab === 'history' ? 'active' : ''}`} onClick={() => setActiveTab('history')}>History Archive</button></li>
+              
               <li><button className={`nav-item ${activeTab === 'team' ? 'active' : ''}`} onClick={() => setActiveTab('team')}>Team</button></li>
             </ul>
           </nav>
@@ -147,6 +153,7 @@ const HomePage = () => {
             {activeTab === 'backlog' && <BacklogView />}
             {activeTab === 'sprints' && <SprintsView />}
             {activeTab === 'components' && <ComponentsView />} 
+            {activeTab === 'history' && <HistoryView />} {/* <-- NEW VIEW RENDER */}
             {activeTab === 'team' && <TeamView projectId={projectId} />}
           </div>
         </main>

@@ -6,7 +6,6 @@ import '../styling/SprintsView.css';
 import CustomDropdown from './CustomDropdown';
 import MultiSelectDropdown from './MultiSelectDropdown';
 import IssueComments from './IssueComments';
-import { size } from 'zod';
 
 const SprintsView = () => {
   const { projectId } = useParams(); 
@@ -40,7 +39,6 @@ const SprintsView = () => {
   const [startDates, setStartDates] = useState({ startDate: '', endDate: '' });
   const [moveUnfinishedTo, setMoveUnfinishedTo] = useState('');
 
-  // --- NEW AI PREDICTION STATES ---
   const [predictionData, setPredictionData] = useState(null);
   const [isPredicting, setIsPredicting] = useState(false);
 
@@ -113,6 +111,7 @@ const SprintsView = () => {
         const summaries = (await sprintsRes.json()).data || [];
         const detailsPromises = summaries.map(s => fetch(`/api/projects/${projectId}/sprints/${s.id}`, { headers }).then(res => res.json()));
         const detailsResults = await Promise.all(detailsPromises);
+        // FILTER OUT COMPLETED SPRINTS
         const activeAndPlanningSprints = detailsResults.map(res => res.data).filter(s => s.status !== 'COMPLETED');
         setSprints(activeAndPlanningSprints);
       }
@@ -141,7 +140,6 @@ const SprintsView = () => {
       const updatedSprint = sprints.find(s => s.id === viewingSprint.id);
       if (updatedSprint) setViewingSprint(updatedSprint);
     } else {
-      // Clear AI prediction data when closing the modal
       setPredictionData(null);
     }
   }, [sprints, viewingSprint]);
@@ -165,8 +163,8 @@ const SprintsView = () => {
       const payload = {
         name: sprintFormData.name, 
         goal: sprintFormData.goal,
-        startDate: sprintFormData.startDate, // Whatever user entered
-        endDate: sprintFormData.endDate || null // Whatever user entered
+        startDate: sprintFormData.startDate, 
+        endDate: sprintFormData.endDate || null
       };
 
       const response = await fetch(url, { method, headers: getAuthHeaders(), body: JSON.stringify(payload) });
@@ -191,9 +189,7 @@ const SprintsView = () => {
       const todayStr = new Date().toISOString().split('T')[0];
 
       const payload = { 
-        startDate: todayStr, // Force System Date
-        // Note: startDates.endDate is already pre-filled with the old end date when the modal opens!
-        // If the user changed it, it sends the new one. If they didn't, it sends the old one.
+        startDate: todayStr, 
         endDate: startDates.endDate 
       };
 
@@ -203,14 +199,13 @@ const SprintsView = () => {
     } catch (error) { console.error(error); } finally { setIsSubmitting(false); }
   };
 
- const handleCompleteSprint = async (e) => {
+  const handleCompleteSprint = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
       const payload = { 
         moveUnfinishedToSprintId: moveUnfinishedTo === '' ? null : moveUnfinishedTo 
       };
-      // NO DATES SENT! The backend will automatically set `completedAt` to Instant.now()
 
       const response = await fetch(`/api/projects/${projectId}/sprints/${activeSprintData.id}/close`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify(payload) });
       if (response.ok) { await fetchSprintsData(); setIsCloseModalOpen(false); }
@@ -218,24 +213,17 @@ const SprintsView = () => {
     } catch (error) { console.error(error); } finally { setIsSubmitting(false); }
   };
 
-  // --- NEW AI PREDICTION FUNCTION ---
   const handleGetPrediction = async (sprintId) => {
     setIsPredicting(true);
     try {
-      const response = await fetch(`/api/projects/${projectId}/sprints/${sprintId}/prediction`, {
-        headers: getAuthHeaders()
-      });
+      const response = await fetch(`/api/projects/${projectId}/sprints/${sprintId}/prediction`, { headers: getAuthHeaders() });
       if (response.ok) {
         const result = await response.json();
         setPredictionData(result.data);
       } else {
         alert("Failed to fetch AI prediction. Ensure the backend AI service is running.");
       }
-    } catch (error) {
-      console.error("AI Prediction Error:", error);
-    } finally {
-      setIsPredicting(false);
-    }
+    } catch (error) { console.error("AI Prediction Error:", error); } finally { setIsPredicting(false); }
   };
 
   const handleSaveAssignedStories = async (e) => {
@@ -329,9 +317,16 @@ const SprintsView = () => {
     } catch (error) { console.error("Error deleting issue:", error); }
   };
 
+  // --- FILTER OUT COMPLETED ISSUES FROM ASSIGNMENT LIST ---
   const assignedIssueIds = new Set();
   sprints.forEach(sprint => sprint.issues?.forEach(item => { if (!item.removedAt) assignedIssueIds.add(item.issue.id); }));
-  const unassignedIssues = allIssues.filter(issue => !assignedIssueIds.has(issue.id));
+  
+  const unassignedIssues = allIssues.filter(issue => 
+    !assignedIssueIds.has(issue.id) && 
+    !issue.status?.isCompleted && 
+    issue.status?.name?.toLowerCase() !== 'done'
+  );
+  
   const otherPlanningSprints = sprints.filter(s => s.status === 'PLANNING' && s.id !== activeSprintData?.id);
 
   const issuesByComponent = {};
@@ -528,9 +523,12 @@ const SprintsView = () => {
               <div className="sv-modal-issues-list">
                 {(() => {
                   const activeSprintIssues = (viewingSprint.issues || []).filter(item => !item.removedAt);
-                  if (activeSprintIssues.length === 0) return <p className="sv-modal-empty-issues">No issues are currently assigned to this sprint.</p>;
-                  return activeSprintIssues.map(item => (
-                    
+                  // FILTER OUT COMPLETED ISSUES FROM DISPLAY IN MODAL
+                  const visibleModalIssues = activeSprintIssues.filter(item => !item.issue.status?.isCompleted && item.issue.status?.name?.toLowerCase() !== 'done');
+                  
+                  if (visibleModalIssues.length === 0) return <p className="sv-modal-empty-issues">No active issues remain in this sprint.</p>;
+                  
+                  return visibleModalIssues.map(item => (
                     <div 
                       key={item.issue.id} 
                       className="sv-issue-card"
@@ -748,8 +746,7 @@ const SprintsView = () => {
             <form className="sv-modal-form" onSubmit={handleStartSprint}>
               <div className="sv-form-row">
                 <div className="sv-form-group">
-                  <label>Start Date</label>
-                  {/* Disabled input clearly showing the system date */}
+                  <label>Start Date (Auto-set to Today)</label>
                   <input type="date" className="sv-modal-input" value={new Date().toISOString().split('T')[0]} disabled style={{ opacity: 0.6, cursor: 'not-allowed' }} />
                 </div>
                 <div className="sv-form-group">

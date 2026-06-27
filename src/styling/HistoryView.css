@@ -1,0 +1,51 @@
+/* =========================================
+   HISTORY VIEW (hv-)
+   ========================================= */
+
+.hv-tabs-container {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.hv-tab-btn {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  padding-bottom: 0.5rem;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.hv-tab-btn:hover {
+  color: var(--text-main);
+}
+
+.hv-tab-btn.active {
+  color: var(--accent-color);
+  border-bottom: 2px solid var(--accent-color);
+}
+
+.hv-archived-card {
+  opacity: 0.8;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.hv-archived-card:hover {
+  opacity: 1;
+}
+
+.hv-badge-completed {
+  background-color: var(--bg-hover) !important;
+  color: var(--text-main) !important;
+}
+
+.hv-empty-full {
+  grid-column: 1 / -1; /* Spans across all columns in a grid */
+  width: 100%;
+}
