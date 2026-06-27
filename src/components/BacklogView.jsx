@@ -398,7 +398,7 @@ const BacklogView = () => {
                         currentValue={formData.typeId}
                         options={[
                           ...types.map(t => ({ value: t.id, label: t.name })),
-                          { value: 'CREATE_NEW_TYPE', label: '✨ + Create New Type...' } 
+                          { value: 'CREATE_NEW_TYPE', label: '+ Create New Type...' } 
                         ]}
                         onChange={(val) => {
                           if (val === 'CREATE_NEW_TYPE') setIsCreateTypeModalOpen(true);
@@ -414,7 +414,7 @@ const BacklogView = () => {
                         currentValue={formData.priorityId}
                         options={[
                           ...priorities.map(p => ({ value: p.id, label: p.name })),
-                          { value: 'CREATE_NEW_PRIORITY', label: '✨ + Create New Priority...' } 
+                          { value: 'CREATE_NEW_PRIORITY', label: '+ Create New Priority...' } 
                         ]}
                         onChange={(val) => {
                           if (val === 'CREATE_NEW_PRIORITY') setIsCreatePriorityModalOpen(true);
@@ -432,7 +432,7 @@ const BacklogView = () => {
                         currentValue={formData.statusId}
                         options={[
                           ...statuses.map(s => ({ value: s.id, label: s.name })),
-                          { value: 'CREATE_NEW_STATUS', label: '✨ + Create New Status...' } 
+                          { value: 'CREATE_NEW_STATUS', label: '+ Create New Status...' } 
                         ]}
                         onChange={(val) => {
                           if (val === 'CREATE_NEW_STATUS') setIsCreateStatusModalOpen(true);
