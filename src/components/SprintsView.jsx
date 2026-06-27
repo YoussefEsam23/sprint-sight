@@ -6,6 +6,7 @@ import '../styling/SprintsView.css';
 import CustomDropdown from './CustomDropdown';
 import MultiSelectDropdown from './MultiSelectDropdown';
 import IssueComments from './IssueComments';
+import { size } from 'zod';
 
 const SprintsView = () => {
   const { projectId } = useParams(); 
@@ -160,12 +161,12 @@ const SprintsView = () => {
     try {
       const url = editingSprintId ? `/api/projects/${projectId}/sprints/${editingSprintId}` : `/api/projects/${projectId}/sprints`;
       const method = editingSprintId ? 'PUT' : 'POST';
-      const todayStr = new Date().toISOString().split('T')[0];
 
       const payload = {
-        name: sprintFormData.name, goal: sprintFormData.goal,
-        startDate: sprintFormData.startDate || todayStr,
-        endDate: sprintFormData.endDate || null
+        name: sprintFormData.name, 
+        goal: sprintFormData.goal,
+        startDate: sprintFormData.startDate, // Whatever user entered
+        endDate: sprintFormData.endDate || null // Whatever user entered
       };
 
       const response = await fetch(url, { method, headers: getAuthHeaders(), body: JSON.stringify(payload) });
@@ -188,25 +189,28 @@ const SprintsView = () => {
     setIsSubmitting(true);
     try {
       const todayStr = new Date().toISOString().split('T')[0];
+
       const payload = { 
-        startDate: startDates.startDate || todayStr, 
-        endDate: startDates.endDate || null 
+        startDate: todayStr, // Force System Date
+        // Note: startDates.endDate is already pre-filled with the old end date when the modal opens!
+        // If the user changed it, it sends the new one. If they didn't, it sends the old one.
+        endDate: startDates.endDate 
       };
+
       const response = await fetch(`/api/projects/${projectId}/sprints/${activeSprintData.id}/start`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify(payload) });
       if (response.ok) { await fetchSprintsData(); setIsStartModalOpen(false); }
       else { alert(`Failed to start sprint: ${(await response.json()).message}`); }
     } catch (error) { console.error(error); } finally { setIsSubmitting(false); }
   };
 
-  const handleCompleteSprint = async (e) => {
+ const handleCompleteSprint = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const payload = { moveUnfinishedToSprintId: moveUnfinishedTo === '' ? null : moveUnfinishedTo };
-      
-      if (!activeSprintData.endDate) {
-        payload.endDate = new Date().toISOString().split('T')[0];
-      }
+      const payload = { 
+        moveUnfinishedToSprintId: moveUnfinishedTo === '' ? null : moveUnfinishedTo 
+      };
+      // NO DATES SENT! The backend will automatically set `completedAt` to Instant.now()
 
       const response = await fetch(`/api/projects/${projectId}/sprints/${activeSprintData.id}/close`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify(payload) });
       if (response.ok) { await fetchSprintsData(); setIsCloseModalOpen(false); }
@@ -368,7 +372,7 @@ const SprintsView = () => {
         {isLoading ? (
           <div className="sv-loading-state"><h3>Loading sprints...</h3></div>
         ) : (
-          <div className="sv-container">
+          <div className={sprints.length === 0 ? "sv-container-empty" : "sv-container"}>
             {sprints.map(sprint => {
               const activeSprintIssues = (sprint.issues || []).filter(item => !item.removedAt);
               const completedIssuesCount = activeSprintIssues.filter(i => i.issue.status?.isCompleted || i.issue.status?.name?.toLowerCase() === 'done').length;
@@ -743,8 +747,15 @@ const SprintsView = () => {
             </p>
             <form className="sv-modal-form" onSubmit={handleStartSprint}>
               <div className="sv-form-row">
-                <div className="sv-form-group"><label>Start Date</label><input type="date" className="sv-modal-input" value={startDates.startDate} onChange={(e) => setStartDates({...startDates, startDate: e.target.value})} required/></div>
-                <div className="sv-form-group"><label>End Date</label><input type="date" className="sv-modal-input" value={startDates.endDate} onChange={(e) => setStartDates({...startDates, endDate: e.target.value})} required/></div>
+                <div className="sv-form-group">
+                  <label>Start Date</label>
+                  {/* Disabled input clearly showing the system date */}
+                  <input type="date" className="sv-modal-input" value={new Date().toISOString().split('T')[0]} disabled style={{ opacity: 0.6, cursor: 'not-allowed' }} />
+                </div>
+                <div className="sv-form-group">
+                  <label>End Date</label>
+                  <input type="date" className="sv-modal-input" value={startDates.endDate} onChange={(e) => setStartDates({...startDates, endDate: e.target.value})} required/>
+                </div>
               </div>
               <div className="sv-modal-actions">
                 <button type="button" disabled={isSubmitting} className="sv-btn sv-cancel-btn" onClick={() => setIsStartModalOpen(false)}>Cancel</button>

@@ -81,6 +81,10 @@
   gap: 1rem; 
 }
 
+.story-list-empty{
+  display: block;
+}
+
 .story-card {
   background: var(--bg-card); 
   border-radius: 12px; 
@@ -460,3 +464,12 @@ select.bv-modal-input option {
 .bv-view-desc-text { color: var(--text-main); line-height: 1.6; white-space: pre-wrap; background-color: var(--bg-main); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); }
 .bv-view-badges-row { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem; }
 .bv-badge-lg { font-size: 0.9rem; padding: 6px 12px; }
+
+/* --- Added for Mini Modals --- */
+.bv-modal-overlay-top { 
+  z-index: 9999999; /* Guarantees it sits ON TOP of the main modal */
+}
+
+.bv-modal-sm {
+  max-width: 450px; /* Thinner modal for simple single-input forms */
+}

@@ -24,6 +24,11 @@ const BacklogView = () => {
   const [isModalOpen, setIsModalOpen] = useState(false); 
   const [viewingIssue, setViewingIssue] = useState(null); 
 
+  // --- NEW STATES FOR CUSTOM ISSUE TYPE ---
+  const [isCreateTypeModalOpen, setIsCreateTypeModalOpen] = useState(false);
+  const [newTypeName, setNewTypeName] = useState('');
+  const [isCreatingType, setIsCreatingType] = useState(false);
+
   const [formErrors, setFormErrors] = useState({});
   const [formData, setFormData] = useState({ 
     title: '', description: '', typeId: '', priorityId: '', statusId: '', storyPoints: '', assignedTo: '',
@@ -179,6 +184,51 @@ const BacklogView = () => {
     }
   };
 
+  // --- NEW: API FUNCTION TO CREATE CUSTOM ISSUE TYPE ---
+  const handleCreateType = async (e) => {
+    e.preventDefault();
+    if (!newTypeName.trim()) return;
+    
+    setIsCreatingType(true);
+    try {
+      const response = await fetch(`/api/projects/${projectId}/configurations/types`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${localStorage.getItem('sprintSightToken')}`, 
+          'X-XSRF-TOKEN': getCookie('XSRF-TOKEN'), 
+          'Content-Type': 'application/json' 
+        },
+        body: JSON.stringify({ name: newTypeName, isDefault: false })
+      });
+      
+      if (response.ok) {
+        const resData = await response.json();
+        const newType = resData.data || resData;
+        
+        setTypes([...types, newType]); // Add to local state list
+        setFormData({ ...formData, typeId: newType.id }); // Auto-select the newly created type
+        
+        setIsCreateTypeModalOpen(false);
+        setNewTypeName('');
+      } else {
+        const errData = await response.json();
+        alert(`Failed to create issue type: ${errData.message || 'Error'}`);
+      }
+    } catch (error) {
+      console.error("Error creating type:", error);
+    } finally {
+      setIsCreatingType(false);
+    }
+  };
+
+  const togglewidth =() => {
+    if(issues.length === 0)
+    {
+      document.querySelector(".story-list").classList.add("story-list-empty");
+      document.querySelector(".story-list").classList.remove("story-list");
+    }
+  };
+
   return (
     <>
       <div className="bv-container">
@@ -193,11 +243,11 @@ const BacklogView = () => {
         </div>
 
         {isLoading ? (
-          <div className="bv-empty-state">
+          <div className="bv-empty-state" style={{ width : "100%"}}>
             <h2>Loading Issues...</h2>
           </div>
         ) : (
-          <div className="story-list">
+          <div className={issues.length === 0 ? "story-list-empty" : "story-list"} >
             {issues.map(issue => (
               <div key={issue.id} className={`story-card ${openMenuId === issue.id ? 'bv-card-top' : ''}`} onClick={() => setViewingIssue(issue)}>
                 <div className="story-info">
@@ -240,6 +290,7 @@ const BacklogView = () => {
                 <h2>Your backlog is empty.</h2>
                 <p>Click '+ Create Issue' to start planning your project.</p>
               </div>
+              
             )}
           </div>
         )}
@@ -325,8 +376,18 @@ const BacklogView = () => {
                       <label>Issue Type</label>
                       <CustomDropdown 
                         currentValue={formData.typeId}
-                        options={types.map(t => ({ value: t.id, label: t.name }))}
-                        onChange={(val) => setFormData({...formData, typeId: val})}
+                        options={[
+                          ...types.map(t => ({ value: t.id, label: t.name })),
+                          // --- NEW: Add special item to the bottom of the list ---
+                          { value: 'CREATE_NEW_TYPE', label: '+ Create New Type...' } 
+                        ]}
+                        onChange={(val) => {
+                          if (val === 'CREATE_NEW_TYPE') {
+                            setIsCreateTypeModalOpen(true);
+                          } else {
+                            setFormData({...formData, typeId: val});
+                          }
+                        }}
                       />
                       {formErrors.typeId && <span className="bv-form-error">{formErrors.typeId}</span>}
                     </div>
@@ -394,6 +455,42 @@ const BacklogView = () => {
         </div>,
         document.body 
       )}
+
+      {/* ======================================================== */}
+      {/* MODAL 3: CREATE CUSTOM ISSUE TYPE MINI-MODAL               */}
+      {/* ======================================================== */}
+      {isCreateTypeModalOpen && createPortal(
+        <div className="bv-modal-overlay bv-modal-overlay-top" onClick={(e) => { if (e.target === e.currentTarget) setIsCreateTypeModalOpen(false); }}>
+          <div className="bv-modal-content bv-modal-sm">
+            <h2 className="bv-modal-title">Create Issue Type</h2>
+            
+            <form className="bv-modal-form" onSubmit={handleCreateType}>
+              <div className="bv-form-group">
+                <label>Issue Type Name</label>
+                <input 
+                  type="text" 
+                  className="bv-modal-input" 
+                  placeholder="e.g., Epic, Design, Research" 
+                  value={newTypeName} 
+                  maxLength={50}
+                  onChange={(e) => setNewTypeName(e.target.value)} 
+                  autoFocus
+                  required 
+                />
+              </div>
+
+              <div className="bv-modal-actions">
+                <button type="button" className="bv-btn bv-cancel-btn" onClick={() => setIsCreateTypeModalOpen(false)}>Cancel</button>
+                <button type="submit" disabled={isCreatingType} className="bv-btn bv-save-btn">
+                  {isCreatingType ? 'Creating...' : 'Create'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
     </>
   );
 };
