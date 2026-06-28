@@ -44,15 +44,15 @@
   font-weight: 600; 
   margin: 0; 
   letter-spacing: -0.5px;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
-
 
 /* --- Buttons --- */
 .bv-header-actions { 
   display: flex; 
   gap: 1rem; 
-  align-items: 
-  center; 
+  align-items: center; 
 }
 
 .bv-create-btn { 
@@ -72,12 +72,10 @@
   transform: translateY(-1px); 
 }
 
-
 /* --- Base Story List & Cards --- */
 .story-list { 
-   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* Creates exactly 2 equal columns */
-  gap: 16px; 
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 1rem; 
 }
 
@@ -112,18 +110,23 @@
 
 .story-info { 
   flex-grow: 1;
- }
+  min-width: 0; /* Ensures flex child can shrink and word-break works */
+}
 
 .story-title {
   font-size: 1.1rem; 
   color: var(--text-main); 
   margin: 0 0 0.4rem 0; 
   font-weight: 500; 
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .story-desc { 
   margin: 0; color: var(--text-muted); font-size: 0.9rem; line-height: 1.4; 
   display: -webkit-box; -webkit-line-clamp: 1; line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 /* --- Story Meta Tags --- */
@@ -175,7 +178,7 @@
   background-color: var(--bg-card); 
   border: 1px solid var(--border-color); 
   border-radius: 12px; 
-  box-shadow: var(--card-shadow);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08); /* Fixed contrast */
   min-width: 160px; 
   display: flex; 
   flex-direction: column; 
@@ -228,7 +231,7 @@
   position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
   background-color: rgba(0, 0, 0, 0.65); 
   display: flex; justify-content: center; align-items: center; 
-  z-index: 999999; /* Guarantees it overlays everything */
+  z-index: 999999; 
   backdrop-filter: blur(8px); 
   animation: bvFadeInOverlay 0.2s ease-out;
 }
@@ -244,9 +247,13 @@
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
   border: 1px solid var(--border-color); 
   animation: bvSlideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-
-  
+  max-height: 85vh;
+  overflow-y: auto;
 }
+
+/* Sleek Scrollbar for Modal Content */
+.bv-modal-content::-webkit-scrollbar { width: 8px; }
+.bv-modal-content::-webkit-scrollbar-thumb { background-color: var(--border-color); border-radius: 8px; }
 
 @keyframes bvSlideUpModal {
   from { transform: translateY(30px) scale(0.98); opacity: 0; }
@@ -256,42 +263,21 @@
 .bv-modal-title { 
   color: var(--text-main); 
   font-size: 1.5rem;
-   margin: 0 0 1.8rem 0; 
-   font-weight: 700; 
-   letter-spacing: -0.5px; 
-  }
+  margin: 0 0 1.8rem 0; 
+  font-weight: 700; 
+  letter-spacing: -0.5px; 
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
 
 /* Modal Forms */
-.bv-modal-form { 
-  display: flex; 
-  flex-direction: column; 
-  gap: 1.4rem; 
-}
-
-.bv-form-group { 
-  display: flex; 
-  flex-direction: column; 
-  gap: 0.35rem; 
-  margin-bottom: 15px;
-}
-
-.bv-form-row { 
-  display: grid; 
-  grid-template-columns: 1fr 1fr; 
-  gap: 1.2rem; 
-}
-
-.bv-form-group label { 
-  font-weight: 600; 
-  color: var(--text-muted); 
-  font-size: 0.85rem; 
-  letter-spacing: 0.3px; 
-}
+.bv-modal-form { display: flex; flex-direction: column; gap: 1.4rem; }
+.bv-form-group { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 15px; }
+.bv-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+.bv-form-group label { font-weight: 600; color: var(--text-muted); font-size: 0.85rem; letter-spacing: 0.3px; }
 
 .bv-modal-input { 
-  padding: 12px 16px; 
-  border: 1px solid var(--border-color); 
-  border-radius: 10px; 
+  padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 10px; 
   font-size: 0.95rem; color: var(--text-main); background-color: var(--bg-main); 
   outline: none; transition: all 0.2s ease; font-family: inherit; width: 100%; box-sizing: border-box;
 }
@@ -301,113 +287,54 @@
   box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15); 
 }
 
-textarea.bv-modal-input { 
-  resize: vertical; 
-  min-height: 100px; 
-  line-height: 1.5; 
-}
+textarea.bv-modal-input { resize: vertical; min-height: 100px; line-height: 1.5; }
 
 select.bv-modal-input {
   appearance: none; -webkit-appearance: none;
   background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%238b949e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>');
   background-repeat: no-repeat; background-position: right 16px center; padding-right: 40px; cursor: pointer;
 }
-
-select.bv-modal-input option { 
-  background-color: var(--bg-card); 
-  color: var(--text-main); 
-  padding: 10px; 
-}
-
-[data-theme="dark"] select.bv-modal-input {
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>');
-}
+select.bv-modal-input option { background-color: var(--bg-card); color: var(--text-main); padding: 10px; }
+[data-theme="dark"] select.bv-modal-input { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>'); }
 
 /* Form Error */
-.bv-form-error { 
-  color: #e74c3c; 
-  font-size: 0.85rem; 
-  font-weight: 600; 
-  margin-top: 6px; 
-  display: block; 
-}
+.bv-form-error { color: #e74c3c; font-size: 0.85rem; font-weight: 600; margin-top: 6px; display: block; }
 
 /* Actions */
-.bv-modal-actions { 
-  display: flex; 
-  justify-content: flex-end; 
-  gap: 1rem; 
-  margin-top: auto; 
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border-color); 
-  }
-
-.bv-btn { 
-  padding: 10px 24px; 
-  border: none; 
-  border-radius: 8px; 
-  font-weight: 600; 
-  font-size: 0.95rem; 
-  cursor: pointer; 
-  transition: all 0.2s ease; 
-}
-
-.bv-cancel-btn { 
-  background-color: transparent; 
-  color: var(--text-muted); 
-}
-
-.bv-cancel-btn:hover { 
-  background-color: var(--bg-hover); 
-  color: var(--text-main); 
-}
-
-.bv-save-btn { 
-  background-color: var(--accent-color); 
-  color: var(--btn-text); 
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2); 
-}
-
-.bv-save-btn:hover { 
-  background-color: var(--accent-hover); 
-  transform: translateY(-1px); 
-  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.3); 
-}
-
-.bv-delete-btn{
-  background-color: rgba(239, 68, 68, 0.1); 
-  color: #EF4444; 
-  margin-right: auto;
-}
-
-.bv-delete-btn:hover{
-  background-color: #EF4444; 
-  color: white;
-}
+.bv-modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top:5% ; padding-top: 1.5rem; border-top: 1px solid var(--border-color); }
+.bv-btn { padding: 10px 24px; border: none; border-radius: 8px; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.2s ease; }
+.bv-cancel-btn { background-color: transparent; color: var(--text-muted); }
+.bv-cancel-btn:hover { background-color: var(--bg-hover); color: var(--text-main); }
+.bv-save-btn { background-color: var(--accent-color); color: var(--btn-text); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2); }
+.bv-save-btn:hover { background-color: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(245, 158, 11, 0.3); }
+.bv-delete-btn{ background-color: rgba(239, 68, 68, 0.1); color: #EF4444; margin-right: auto; }
+.bv-delete-btn:hover{ background-color: #EF4444; color: white; }
 
 /* =========================================
-   NEW: VIEW ISSUE DETAILS MODAL (Two-Column)
+   VIEW ISSUE DETAILS MODAL (Two-Column)
    ========================================= */
 .bv-view-modal {
   background-color: var(--bg-sidebar); 
   color: var(--text-main); 
   width: 95%; 
-  max-width: 1050px; /* Wide enough to fit both columns comfortably */
+  max-width: 1050px; 
   border-radius: 20px; 
   padding: 2.5rem; 
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
   border: 1px solid var(--border-color); 
   animation: bvSlideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   display: grid;
-  grid-template-columns: 1.3fr 1fr; /* Left side is slightly wider */
+  grid-template-columns: 1.3fr 1fr;
   gap: 2.5rem;
-  max-height: 90vh;
+  max-height: 85vh;
+  overflow: hidden; /* Lock main container */
 }
 
 .bv-view-left {
   display: flex;
   flex-direction: column;
-  overflow-y: auto; /* Allows left side to scroll if description is huge */
+  max-height: 100%;
+  overflow-y: auto;
   padding-right: 15px;
 }
 
@@ -416,40 +343,29 @@ select.bv-modal-input option {
   border-radius: 12px;
   padding: 1.5rem;
   border: 1px solid var(--border-color);
-  overflow-y: auto; /* Allows comments to scroll independently */
+  max-height: 100%;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
 
-/* Responsive: Stack them vertically on smaller laptop/tablet screens */
+/* Scrollbars for split columns */
+.bv-view-left::-webkit-scrollbar, .bv-view-right::-webkit-scrollbar { width: 6px; }
+.bv-view-left::-webkit-scrollbar-thumb, .bv-view-right::-webkit-scrollbar-thumb { background-color: var(--border-color); border-radius: 8px; }
+
+/* Responsive */
 @media (max-width: 900px) {
   .bv-view-modal {
     grid-template-columns: 1fr;
     overflow-y: auto;
+    overflow: hidden;
   }
 }
 
-.bv-text-input-container{
-  display: flex;
-  flex-direction: column;
-  margin: 15px;
-  width: 50%;
-}
+.bv-text-input-container{ display: flex; flex-direction: column; margin: 15px; width: 50%; }
+.bv-select-input-container{ display: flex; flex-direction: column; margin: 15px; width: 50%; }
+.bv-inputs-container{ display: flex; flex-direction: row; justify-content: space-between; }
 
-.bv-select-input-container{
-  display: flex;
-  flex-direction: column;
-  margin: 15px;
-  width: 50%;
-}
-
-.bv-inputs-container{
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-}
-
-/* --- Added for Inline Replacement --- */
 .bv-card-top { z-index: 50; }
 .bv-issue-header-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
 .bv-issue-type { font-size: 0.75rem; font-weight: bold; color: var(--accent-color); text-transform: uppercase; }
@@ -458,18 +374,36 @@ select.bv-modal-input option {
 .bv-text-danger { color: #e74c3c; }
 .bv-view-meta-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .bv-view-meta-label { font-size: 0.85rem; font-weight: bold; color: var(--accent-color); text-transform: uppercase; }
-.bv-view-title-text { margin: 0 0 1.5rem 0; font-size: 1.8rem; color: var(--text-main); line-height: 1.2; }
 .bv-view-section { margin-bottom: 2rem; }
 .bv-view-section-title { color: var(--text-muted); margin-bottom: 0.5rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; }
-.bv-view-desc-text { color: var(--text-main); line-height: 1.6; white-space: pre-wrap; background-color: var(--bg-main); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); }
-.bv-view-badges-row { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem; }
+.bv-view-badges-row { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 3rem; }
 .bv-badge-lg { font-size: 0.9rem; padding: 6px 12px; }
 
-/* --- Added for Mini Modals --- */
-.bv-modal-overlay-top { 
-  z-index: 9999999; /* Guarantees it sits ON TOP of the main modal */
+/* Break word utilities for text fields */
+.bv-view-title-text { 
+  margin: 0 0 1.5rem 0; font-size: 1.8rem; color: var(--text-main); line-height: 1.2; 
+  overflow-wrap: break-word; word-break: break-word;
 }
 
-.bv-modal-sm {
-  max-width: 450px; /* Thinner modal for simple single-input forms */
+.bv-view-desc-text { 
+  color: var(--text-main); 
+  line-height: 1.6; 
+  white-space: pre-wrap; 
+  background-color: var(--bg-main); 
+  padding: 1rem; 
+  border-radius: 8px; 
+  border: 1px solid var(--border-color); 
+  overflow-wrap: break-word; 
+  word-break: break-word;
+  
+  /* --- التعديل الجديد: تحديد الطول وعمل Scroll داخلي --- */
+  max-height: 250px; /* تقدر تزودها أو تنقصها حسب ما تحب */
+  overflow-y: auto;
 }
+
+/* شكل الـ Scrollbar جوه صندوق الوصف */
+.bv-view-desc-text::-webkit-scrollbar { width: 6px; }
+.bv-view-desc-text::-webkit-scrollbar-thumb { background-color: var(--border-color); border-radius: 8px; }
+
+.bv-modal-overlay-top { z-index: 9999999; }
+.bv-modal-sm { max-width: 450px; }

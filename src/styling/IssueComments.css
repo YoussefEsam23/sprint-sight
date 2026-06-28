@@ -29,13 +29,18 @@
 }
 
 .ic-card {
-  display: flex;
+  ddisplay: flex;
   gap: 12px;
   background-color: var(--bg-main);
   padding: 14px;
   border-radius: 12px;
   border: 1px solid var(--border-color);
   transition: border-color 0.2s;
+  
+  /* منع الكارت إنه يطول بزيادة عن اللزوم */
+  max-height: 250px; 
+  display: flex;
+  flex-direction: row;
 }
 
 .ic-card:hover {
@@ -58,6 +63,7 @@
 
 .ic-body {
   flex-grow: 1;
+  min-width: 0;
 }
 
 .ic-meta {
@@ -83,8 +89,17 @@
   font-size: 0.9rem;
   line-height: 1.5;
   margin: 0;
-  white-space: pre-wrap; /* Keeps line breaks! */
+  white-space: pre-wrap; /* بيحافظ على الـ line breaks */
+  word-wrap: break-word; /* بيخلي الكلام الطويل ينزل سطر جديد بدل ما يمتد بالعرض */
+  
+  /* --- التعديلات الجديدة --- */
+  max-height: 150px; /* ده أقصى طول للتعليق قبل ما يظهر الـ Scrollbar */
+  overflow-y: auto;  /* بيعمل Scroll عمودي فقط */
+  padding-right: 5px;
 }
+
+.ic-text::-webkit-scrollbar { width: 5px; }
+.ic-text::-webkit-scrollbar-thumb { background-color: var(--border-color); border-radius: 5px; }
 
 /* --- Comment Actions (Edit/Delete) --- */
 .ic-actions {

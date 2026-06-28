@@ -22,6 +22,8 @@
   font-weight: 700;
   letter-spacing: -0.5px;
   margin: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .tv-invite-btn {
@@ -66,6 +68,7 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease, border-color 0.2s ease;
   cursor: pointer;
+  min-width: 0; /* Ensures word-break functions inside flex */
 }
 
 .tv-card:hover {
@@ -103,6 +106,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0; /* CRITICAL: Allows the text to truncate inside a flexbox */
 }
 
 .tv-name {
@@ -110,12 +114,22 @@
   font-size: 1.05rem;
   font-weight: 600;
   color: var(--text-main);
+  
+  /* --- NEW: Force single line and add '...' --- */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tv-username {
   margin: 0;
   font-size: 0.85rem;
   color: var(--text-muted);
+
+  /* --- NEW: Force single line and add '...' --- */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* --- Actions & Roles --- */
@@ -123,6 +137,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  flex-shrink: 0;
 }
 
 .tv-role-badge {
@@ -137,7 +152,6 @@
   letter-spacing: 0.5px;
   white-space: nowrap;
 }
-
 
 /* =========================================
    NEW: EDIT MEMBER MODAL
@@ -161,7 +175,15 @@
   max-width: 450px;
   box-shadow: 0 20px 40px rgba(0,0,0,0.5);
   animation: slideUp 0.2s ease-out;
+  
+  /* Scroll limits applied */
+  max-height: 85vh;
+  overflow-y: auto;
 }
+
+/* Sleek Scrollbar */
+.tv-modal-content::-webkit-scrollbar { width: 8px; }
+.tv-modal-content::-webkit-scrollbar-thumb { background-color: var(--border-color); border-radius: 8px; }
 
 .tv-modal-header {
   display: flex;
@@ -181,10 +203,21 @@
   font-size: 1.5rem; font-weight: bold;
   background: var(--bg-hover);
   color: var(--text-main);
+  flex-shrink: 0;
 }
 
-.tv-modal-info h3 { margin: 0; font-size: 1.3rem; color: var(--text-main); }
-.tv-modal-info p { margin: 0; font-size: 0.9rem; color: var(--text-muted); }
+.tv-modal-info {
+  min-width: 0;
+}
+
+.tv-modal-info h3 { 
+  margin: 0; font-size: 1.3rem; color: var(--text-main); 
+  overflow-wrap: break-word; word-break: break-word;
+}
+.tv-modal-info p { 
+  margin: 0; font-size: 0.9rem; color: var(--text-muted); 
+  overflow-wrap: break-word; word-break: break-word;
+}
 
 .tv-modal-form-group {
   margin-bottom: 1.5rem;
@@ -228,7 +261,7 @@
 .tv-btn-save {
   background: var(--accent-color);
   color: var(--btn-text);
-  margin-left: auto; /* Pushes save button to the right */
+  margin-left: auto;
 }
 .tv-btn-save:hover {
   background: var(--accent-hover);

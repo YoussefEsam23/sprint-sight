@@ -30,15 +30,8 @@
   box-shadow:rgba(245, 158, 11, 0.15);
 }
 
-.sv-active-sprint {
-  border-top: 4px solid var(--active-sprint);
-}
-
-.sv-active-sprint:hover{
-  transform: translateY(-4px) scale(1.01);
-  border-color: var(--active-sprint); 
-  box-shadow:  rgba(245, 158, 11, 0.15);
-}
+.sv-active-sprint { border-top: 4px solid var(--active-sprint); }
+.sv-active-sprint:hover{ transform: translateY(-4px) scale(1.01); border-color: var(--active-sprint); box-shadow: rgba(245, 158, 11, 0.15); }
 
 /* --- Sprint Header --- */
 .sv-header {
@@ -50,411 +43,171 @@
   padding-bottom: 1rem;
 }
 
-.sv-header-no-border {
-  border-bottom: none;
-  padding-bottom: 0;
-  margin-bottom: 0;
-}
-
-.sv-title-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+.sv-header-no-border { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+.sv-title-wrapper { display: flex; align-items: center; gap: 10px; min-width: 0; }
 
 .sv-title {
-  color: var(--text-main);
-  font-size: 1.4rem;
-  margin: 0 0 0.3rem 0;
+  color: var(--text-main); font-size: 1.4rem; margin: 0 0 0.3rem 0;
+  overflow-wrap: break-word; word-break: break-word;
 }
 
-.sv-status-badge {
-  font-size: 0.7rem;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-weight: bold;
-}
-
-.sv-status-active {
-  background-color: rgba(16, 185, 129, 0.2);
-  color: #10B981;
-}
-
-.sv-status-planning {
-  background-color: var(--bg-hover);
-  color: var(--text-muted);
-}
-
-.sv-dates {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  margin: 0;
-  font-weight: 600;
-}
+.sv-status-badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; font-weight: bold; }
+.sv-status-active { background-color: rgba(16, 185, 129, 0.2); color: #10B981; }
+.sv-status-planning { background-color: var(--bg-hover); color: var(--text-muted); }
+.sv-dates { color: var(--text-muted); font-size: 0.9rem; margin: 0; font-weight: 600; }
 
 .sv-goal-text {
-  font-size: 0.85rem;
-  color: var(--text-muted);
+ font-size: 0.85rem; 
+  color: var(--text-muted); 
   margin-top: 6px;
+  display: -webkit-box; -webkit-line-clamp: 1; line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
-.sv-actions {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
+.sv-actions { display: flex; align-items: center; gap: 1rem; }
 
 /* --- Buttons --- */
-.sv-btn-start {
-  background-color: var(--active-sprint);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: opacity 0.2s ease;
-}
-.sv-btn-start:hover { 
-  opacity: 0.9; 
-}
-
-.sv-btn-complete {
-  background-color: #3B82F6;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: opacity 0.2s ease;
-}
+.sv-btn-start { background-color: var(--active-sprint); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: opacity 0.2s ease; }
+.sv-btn-start:hover { opacity: 0.9; }
+.sv-btn-complete { background-color: #3B82F6; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: opacity 0.2s ease; }
 .sv-btn-complete:hover { opacity: 0.9; }
 
 .sv-add-issues-btn {
-  background: transparent;
-  border: 1px solid var(--accent-color);
-  color: var(--accent-color);
-  padding: 6px 14px;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  background: transparent; border: 1px solid var(--accent-color); color: var(--accent-color);
+  padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s ease;
 }
+.sv-add-issues-btn:hover { background-color: var(--accent-color); color: var(--btn-text); box-shadow: 0 0 12px rgba(245, 158, 11, 0.4); }
 
-.sv-add-issues-btn:hover {
-  background-color: var(--accent-color);
-  color: var(--btn-text);
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
-}
-
-.sv-text-danger {
-  color: #e74c3c !important;
-}
+.sv-text-danger { color: #e74c3c !important; }
 
 .sv-remove-btn {
-  background: none;
-  border: none;
-  color: #e74c3c;
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
-  padding: 4px 8px;
-  transition: opacity 0.2s ease;
+  background: none; border: none; color: #e74c3c; font-size: 0.85rem; font-weight: 700; cursor: pointer; padding: 4px 8px; transition: opacity 0.2s ease;
 }
+.sv-remove-btn:hover { opacity: 0.7; text-decoration: underline; }
 
-.sv-remove-btn:hover {
-  opacity: 0.7;
-  text-decoration: underline;
-}
-
-/* Dropdown specific position for sprints */
-.sv-dropdown-menu {
-  top: 100%;
-  right: 0;
-}
+.sv-dropdown-menu { top: 100%; right: 0; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08); border: 1px solid var(--border-color); }
 
 /* --- Dashboard Metrics Summary --- */
 .sv-metrics-summary {
-  min-height: auto;
-  padding: 1.2rem;
-  display: flex;
-  justify-content: space-around;
-  background: var(--bg-main);
-  border-radius: 8px;
-  border: 1px dashed var(--border-color);
-  margin-top: 1.5rem;
+  min-height: auto; padding: 1.2rem; display: flex; justify-content: space-around;
+  background: var(--bg-main); border-radius: 8px; border: 1px dashed var(--border-color); margin-top: 1.5rem;
 }
-
-.sv-empty-metrics {
-  color: var(--text-muted);
-  font-style: italic;
-  font-size: 0.9rem;
-}
-
-.sv-metric-item {
-  text-align: center;
-}
-
-.sv-metric-value {
-  display: block;
-  font-size: 1.4rem;
-  font-weight: bold;
-  color: var(--text-main);
-}
-
+.sv-empty-metrics { color: var(--text-muted); font-style: italic; font-size: 0.9rem; }
+.sv-metric-item { text-align: center; }
+.sv-metric-value { display: block; font-size: 1.4rem; font-weight: bold; color: var(--text-main); }
 .sv-metric-success { color: #10B981; }
 .sv-metric-danger { color: #EF4444; }
-
-.sv-metric-label {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.sv-metric-divider {
-  width: 1px;
-  background-color: var(--border-color);
-}
+.sv-metric-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.sv-metric-divider { width: 1px; background-color: var(--border-color); }
 
 /* --- Empty Board State --- */
-.sv-loading-state {
-  text-align: center;
-  padding: 4rem;
-  color: var(--text-muted);
-}
-
-.sv-empty-board {
-  text-align: center;
-  padding: 4rem;
-  background: var(--bg-card);
-  border-radius: 12px;
-  border: 1px dashed var(--border-color);
-}
-
-.sv-empty-board-title {
-  color: var(--text-main);
-  margin-bottom: 0.5rem;
-}
-
-.sv-empty-board-text {
-  color: var(--text-muted);
-}
+.sv-loading-state { text-align: center; padding: 4rem; color: var(--text-muted); }
+.sv-empty-board { text-align: center; padding: 4rem; background: var(--bg-card); border-radius: 12px; border: 1px dashed var(--border-color); }
+.sv-empty-board-title { color: var(--text-main); margin-bottom: 0.5rem; }
+.sv-empty-board-text { color: var(--text-muted); }
 
 /* =========================================
    SPRINTS MODAL (PORTAL ISOLATION)
    ========================================= */
 .sv-modal-overlay { 
   position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
-  background-color: rgba(0, 0, 0, 0.65); 
-  display: flex; justify-content: center; align-items: center; 
-  z-index: 999999; 
-  backdrop-filter: blur(8px); 
-  animation: svFadeInOverlay 0.2s ease-out;
+  background-color: rgba(0, 0, 0, 0.65); display: flex; justify-content: center; align-items: center; 
+  z-index: 999999; backdrop-filter: blur(8px); animation: svFadeInOverlay 0.2s ease-out;
 }
-
-.sv-modal-overlay-top {
-  z-index: 9999999; /* Escapes issue modal above sprint modal */
-}
-
+.sv-modal-overlay-top { z-index: 9999999; }
 @keyframes svFadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
 
 .sv-modal-content { 
-  background-color: var(--bg-sidebar); 
-  color: var(--text-main); 
-  width: 90%; max-width: 480px; 
-  border-radius: 20px; 
-  padding: 2.5rem; 
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
-  border: 1px solid var(--border-color); 
+  background-color: var(--bg-sidebar); color: var(--text-main); 
+  width: 90%; max-width: 480px; border-radius: 20px; padding: 2.5rem; 
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); border: 1px solid var(--border-color); 
   animation: svSlideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 85vh;
+  overflow-y: auto;
 }
 
-.sv-modal-lg {
-  max-width: 600px;
-}
+.sv-modal-content::-webkit-scrollbar { width: 8px; }
+.sv-modal-content::-webkit-scrollbar-thumb { background-color: var(--border-color); border-radius: 8px; }
+
+.sv-modal-lg { max-width: 600px; }
 
 @keyframes svSlideUpModal {
   from { transform: translateY(30px) scale(0.98); opacity: 0; }
   to { transform: translateY(0) scale(1); opacity: 1; }
 }
 
-.sv-modal-title { color: var(--text-main); font-size: 1.5rem; margin: 0 0 1.8rem 0; font-weight: 700; letter-spacing: -0.5px; }
-
-.sv-modal-desc {
-  color: var(--text-muted);
-  margin-bottom: 1.5rem;
-  font-size: 0.9rem;
+.sv-modal-title { 
+  color: var(--text-main); font-size: 1.5rem; margin: 0 0 1.8rem 0; font-weight: 700; letter-spacing: -0.5px; 
+  overflow-wrap: break-word; word-break: break-word;
 }
+.sv-modal-desc { color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem; }
 
 /* View Sprint Details Modal Splitting */
 .sv-modal-left {
-  display: flex;
-  flex-direction: column;
-  max-height: calc(90vh - 5rem);
+  display: flex; flex-direction: column;
+  max-height: 100%;
   overflow-y: auto;
-  padding-right: 20px;
-  padding-left: 20px;
+  padding-right: 20px; padding-left: 20px;
 }
-
 .sv-modal-right {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  max-height: calc(90vh - 5rem);
+  display: flex; flex-direction: column;
+  max-height: 100%;
+  overflow-y: auto;
+  padding-right: 10px;
 }
+.sv-modal-left::-webkit-scrollbar, .sv-modal-right::-webkit-scrollbar { width: 6px; }
+.sv-modal-left::-webkit-scrollbar-thumb, .sv-modal-right::-webkit-scrollbar-thumb { background-color: var(--border-color); border-radius: 8px; }
 
-.sv-modal-meta-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
-.sv-modal-meta-label {
-  font-size: 0.85rem;
-  font-weight: bold;
-  color: var(--accent-color);
-  text-transform: uppercase;
-}
+.sv-modal-meta-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.sv-modal-meta-label { font-size: 0.85rem; font-weight: bold; color: var(--accent-color); text-transform: uppercase; }
 
 .sv-modal-title-text {
-  margin: 0 0 1.5rem 0;
-  font-size: 1.8rem;
-  color: var(--text-main);
-  line-height: 1.2;
+  margin: 0 0 1.5rem 0; font-size: 1.8rem; color: var(--text-main); line-height: 1.2;
+  overflow-wrap: break-word; word-break: break-word;
 }
-
-.sv-modal-section {
-  margin-bottom: 2rem;
-}
-
-.sv-modal-section-title {
-  color: var(--text-muted);
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
+.sv-modal-section { margin-bottom: 2rem; }
+.sv-modal-section-title { color: var(--text-muted); margin-bottom: 0.5rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; }
 
 .sv-modal-goal-text {
-  color: var(--text-main);
-  line-height: 1.6;
-  white-space: pre-wrap;
-  background-color: var(--bg-main);
-  padding: 1rem;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-}
-
-.sv-modal-dates-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.sv-modal-date-badge {
-  font-size: 0.9rem;
-  padding: 6px 12px;
-  background-color: var(--bg-hover);
-  color: var(--text-main);
-  border-radius: 12px;
-}
-
-.sv-view-actions {
-  margin-top: auto;
-  padding-top: 1.5rem;
-  border-top: none;
-}
-
-.sv-view-actions-top {
-  margin-top: auto;
-}
-
-.sv-modal-right-title {
-  margin: 0 0 1rem 0;
-  font-size: 1.1rem;
-  color: var(--text-main);
-  flex-shrink: 0;
-}
-
-.sv-modal-issues-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding-right: 8px;
+  color: var(--text-main); 
+  line-height: 1.6; 
+  white-space: pre-wrap; 
+  background-color: var(--bg-main); 
+  padding: 1rem; 
+  border-radius: 8px; 
+  border: 1px solid var(--border-color); 
+  overflow-wrap: break-word; 
+  word-break: break-word;
+  
+  /* --- التعديل الجديد: تحديد الطول وعمل Scroll داخلي --- */
+  max-height: 170px; /* تقدر تزودها أو تنقصها حسب ما تحب */
   overflow-y: auto;
-  flex: 1;
-  min-height: 0;
 }
 
-.sv-modal-empty-issues {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
+.sv-modal-dates-row { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem; }
+.sv-modal-date-badge { font-size: 0.9rem; padding: 6px 12px; background-color: var(--bg-hover); color: var(--text-main); border-radius: 12px; }
 
-/* Clickable Issue Card in Sprint Modal */
+.sv-view-actions { margin-top: auto; padding-top: 1.5rem; border-top: none; }
+.sv-view-actions-top { margin-top: auto; }
+.sv-modal-right-title { margin: 0 0 1rem 0; font-size: 1.1rem; color: var(--text-main); flex-shrink: 0; }
+
+.sv-modal-issues-list { display: flex; flex-direction: column; gap: 12px; padding-right: 8px; overflow-y: auto; flex: 1; min-height: 0; }
+.sv-modal-empty-issues { color: var(--text-muted); font-size: 0.9rem; }
+
+/* Clickable Issue Card */
 .sv-issue-card {
-  background-color: var(--bg-card);
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-  flex-shrink: 0;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  background-color: var(--bg-card); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);
+  flex-shrink: 0; cursor: pointer; transition: all 0.2s ease;
 }
-
-.sv-issue-card:first-child{
-  margin-top: 10px;
-}
-
-.sv-issue-card:hover {
-  border-color: var(--accent-color);
-  transform: translateY(-2px);
-}
-
-.sv-issue-card-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 4px;
-  align-items: center;
-}
-
-.sv-issue-card-type {
-  font-size: 0.75rem;
-  font-weight: bold;
-  color: var(--accent-color);
-  text-transform: uppercase;
-}
-
-.sv-issue-card-id {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-left: 8px;
-}
-
-.sv-issue-card-title {
-  margin: 0 0 8px 0;
-  font-size: 0.95rem;
-  color: var(--text-main);
-}
-
-.sv-issue-card-badges {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.sv-issue-badge {
-  font-size: 0.75rem;
-  padding: 2px 8px;
-  background-color: var(--bg-hover);
-  color: var(--text-main);
-  border-radius: 12px;
-}
+.sv-issue-card:first-child{ margin-top: 10px; }
+.sv-issue-card:hover { border-color: var(--accent-color); transform: translateY(-2px); }
+.sv-issue-card-header { display: flex; justify-content: space-between; margin-bottom: 4px; align-items: center; }
+.sv-issue-card-type { font-size: 0.75rem; font-weight: bold; color: var(--accent-color); text-transform: uppercase; }
+.sv-issue-card-id { font-size: 0.75rem; color: var(--text-muted); margin-left: 8px; }
+.sv-issue-card-title { margin: 0 0 8px 0; font-size: 0.95rem; color: var(--text-main); overflow-wrap: break-word; word-break: break-word;}
+.sv-issue-card-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+.sv-issue-badge { font-size: 0.75rem; padding: 2px 8px; background-color: var(--bg-hover); color: var(--text-main); border-radius: 12px; }
 
 /* Form Styles */
 .sv-modal-form { display: flex; flex-direction: column; gap: 1.4rem; }
@@ -478,40 +231,14 @@ textarea.sv-modal-input { resize: vertical; line-height: 1.5; }
 .sv-textarea-sm { min-height: 80px; }
 
 /* Complete Sprint Metrics */
-.sv-complete-metrics-row {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.sv-complete-metric-box {
-  flex: 1;
-  padding: 1rem;
-  border-radius: 8px;
-  text-align: center;
-}
-
-.sv-metric-success-box {
-  background-color: rgba(16, 185, 129, 0.1);
-  border: 1px solid #10B981;
-}
-
-.sv-metric-danger-box {
-  background-color: rgba(239, 68, 68, 0.1);
-  border: 1px solid #EF4444;
-}
-
-.sv-complete-metric-value {
-  margin: 0;
-  font-size: 1.5rem;
-}
+.sv-complete-metrics-row { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
+.sv-complete-metric-box { flex: 1; padding: 1rem; border-radius: 8px; text-align: center; }
+.sv-metric-success-box { background-color: rgba(16, 185, 129, 0.1); border: 1px solid #10B981; }
+.sv-metric-danger-box { background-color: rgba(239, 68, 68, 0.1); border: 1px solid #EF4444; }
+.sv-complete-metric-value { margin: 0; font-size: 1.5rem; }
 .sv-metric-success-text { color: #10B981; }
 .sv-metric-danger-text { color: #EF4444; }
-
-.sv-complete-metric-label {
-  font-size: 0.8rem;
-  color: var(--text-main);
-}
+.sv-complete-metric-label { font-size: 0.8rem; color: var(--text-main); }
 
 /* Actions */
 .sv-modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color); }
@@ -527,193 +254,38 @@ textarea.sv-modal-input { resize: vertical; line-height: 1.5; }
 .sv-btn-delete-left { background-color: rgba(239, 68, 68, 0.1); color: #EF4444; margin-right: auto; }
 .sv-btn-delete-left:hover { background-color: #EF4444; color: white; }
 
-/* Overridden badges from BacklogView applied here */
-.sv-badge-components {
-  font-size: 0.9rem;
-  padding: 6px 12px;
-  background-color: rgba(245, 158, 11, 0.1);
-  color: var(--accent-color);
-}
-.sv-badge-lg {
-  font-size: 0.9rem;
-  padding: 6px 12px;
-}
-.sv-badge-no-bg {
-  background: none;
-  padding: 0;
-}
+.sv-badge-components { font-size: 0.9rem; padding: 6px 12px; background-color: rgba(245, 158, 11, 0.1); color: var(--accent-color); }
+.sv-badge-lg { font-size: 0.9rem; padding: 6px 12px; }
+.sv-badge-no-bg { background: none; padding: 0; }
 
 /* --- Pull Issues Modal List --- */
-.sv-pull-list {
-  max-height: 300px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-  padding-right: 6px;
-}
+.sv-pull-list { max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.8rem; padding-right: 6px; }
+.sv-pull-item { display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--bg-main); border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s ease, background-color 0.2s ease; }
+.sv-pull-item:hover { background: var(--bg-hover); }
+.sv-pull-item.selected { border-color: var(--accent-color); background: rgba(245, 158, 11, 0.05); }
+.sv-pull-item-title { color: var(--text-main); font-weight: 600; overflow-wrap: break-word; word-break: break-word; }
+.sv-pull-item-id { color: var(--text-muted); font-size: 0.8rem; margin-right: 10px; }
+.sv-pull-empty { text-align: center; color: var(--text-muted); }
 
-.sv-pull-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  background: var(--bg-main);
-  border-radius: 8px;
-  cursor: pointer;
-  border: 2px solid transparent;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
-}
-
-.sv-pull-item:hover {
-  background: var(--bg-hover);
-}
-
-.sv-pull-item.selected {
-  border-color: var(--accent-color);
-  background: rgba(245, 158, 11, 0.05);
-}
-
-.sv-pull-item-title {
-  color: var(--text-main);
-  font-weight: 600;
-}
-
-.sv-pull-item-id {
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  margin-right: 10px;
-}
-
-.sv-pull-empty {
-  text-align: center;
-  color: var(--text-muted);
-}
-
-/* --- New Remove From Sprint Button --- */
-.sv-btn-remove-sprint {
-  background-color: rgba(245, 158, 11, 0.1);
-  color: var(--accent-color);
-  margin-right: 10px;
-}
-.sv-btn-remove-sprint:hover {
-  background-color: var(--accent-color);
-  color: var(--btn-text);
-  transform: translateY(-1px);
-}
+.sv-btn-remove-sprint { background-color: rgba(245, 158, 11, 0.1); color: var(--accent-color); margin-right: 10px; }
+.sv-btn-remove-sprint:hover { background-color: var(--accent-color); color: var(--btn-text); transform: translateY(-1px); }
 
 /* --- Component Grouping in Add Issues Modal --- */
-.sv-issue-group {
-  margin-bottom: 0.5rem;
-}
-
-.sv-group-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 14px;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  color: var(--text-main);
-  transition: background-color 0.2s ease, border-color 0.2s ease;
-}
-
-.sv-group-header:hover {
-  background-color: var(--bg-hover);
-  border-color: var(--accent-color);
-}
-
-.sv-group-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding-left: 1rem;
-  margin-top: 0.5rem;
-  margin-bottom: 1rem;
-  border-left: 2px dashed var(--border-color);
-  margin-left: 14px;
-}
-
-.sv-startdate-note{
-  font-size: 0.8rem;
-  color: var(--text-muted);
-}
+.sv-issue-group { margin-bottom: 0.5rem; }
+.sv-group-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--text-main); transition: background-color 0.2s ease, border-color 0.2s ease; }
+.sv-group-header:hover { background-color: var(--bg-hover); border-color: var(--accent-color); }
+.sv-group-content { display: flex; flex-direction: column; gap: 0.5rem; padding-left: 1rem; margin-top: 0.5rem; margin-bottom: 1rem; border-left: 2px dashed var(--border-color); margin-left: 14px; }
+.sv-startdate-note{ font-size: 0.8rem; color: var(--text-muted); }
 
 /* =========================================
    ✨ AI PREDICTION STYLES
    ========================================= */
-
-.sv-btn-ai {
-  background: linear-gradient(135deg, #8B5CF6, #D946EF);
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  text-align: center;
-  font-size: 0.95rem;
-}
-
-.sv-btn-ai:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
-}
-
-.sv-btn-ai:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.sv-ai-card {
-  background: linear-gradient(145deg, rgba(139, 92, 246, 0.05), rgba(217, 70, 239, 0.05));
-  border: 1px solid rgba(139, 92, 246, 0.3);
-  border-radius: 12px;
-  padding: 1.2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
-  animation: svFadeInOverlay 0.5s ease-out;
-}
-
-.sv-ai-metric {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.sv-ai-label {
-  font-size: 0.8rem;
-  font-weight: 800;
-  color: #D946EF;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.sv-ai-bar-bg {
-  width: 100%;
-  height: 10px;
-  background: rgba(139, 92, 246, 0.1);
-  border-radius: 5px;
-  overflow: hidden;
-}
-
-.sv-ai-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #8B5CF6, #D946EF);
-  border-radius: 5px;
-  transition: width 1.5s cubic-bezier(0.25, 1, 0.5, 1); /* Smooth animation */
-}
-
-.sv-ai-value {
-  font-size: 0.85rem;
-  color: var(--text-main);
-  font-weight: 600;
-  text-align: right;
-  margin-top: 2px;
-}
+.sv-btn-ai { background: linear-gradient(135deg, #8B5CF6, #D946EF); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; text-align: center; font-size: 0.95rem; }
+.sv-btn-ai:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4); }
+.sv-btn-ai:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+.sv-ai-card { background: linear-gradient(145deg, rgba(139, 92, 246, 0.05), rgba(217, 70, 239, 0.05)); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 12px; padding: 1.2rem; display: flex; flex-direction: column; gap: 1.2rem; animation: svFadeInOverlay 0.5s ease-out; }
+.sv-ai-metric { display: flex; flex-direction: column; gap: 6px; }
+.sv-ai-label { font-size: 0.8rem; font-weight: 800; color: #D946EF; text-transform: uppercase; letter-spacing: 0.5px; }
+.sv-ai-bar-bg { width: 100%; height: 10px; background: rgba(139, 92, 246, 0.1); border-radius: 5px; overflow: hidden; }
+.sv-ai-bar-fill { height: 100%; background: linear-gradient(90deg, #8B5CF6, #D946EF); border-radius: 5px; transition: width 1.5s cubic-bezier(0.25, 1, 0.5, 1); }
+.sv-ai-value { font-size: 0.85rem; color: var(--text-main); font-weight: 600; text-align: right; margin-top: 2px; }
