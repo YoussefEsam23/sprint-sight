@@ -1,6 +1,6 @@
 const originalFetch = window.fetch;
 
-// Variables to manage the "Waiting Line"
+// Variables to manage the "Waiting Line" for JWT refreshes
 let isRefreshing = false;
 let failedQueue = [];
 
@@ -26,7 +26,38 @@ const processQueue = (error) => {
 window.fetch = async (...args) => {
   let response = await originalFetch(...args);
 
-  // If the backend returns 401 Unauthorized, the 15-minute token expired!
+  // =========================================================================
+  // --- NEW: SILENT CSRF RETRY (403 FORBIDDEN) ---
+  // =========================================================================
+  if (response.status === 403) {
+    let init = args[1] || {};
+    
+    // Check our custom flag to prevent infinite loops (if it truly is a permissions error)
+    if (!init._csrfRetried) {
+      init._csrfRetried = true; // Mark this request as retried
+      args[1] = init;
+
+      const newCsrfToken = getCookie('XSRF-TOKEN');
+      
+      // If Spring planted the cookie during the 403 rejection, grab it and retry!
+      if (newCsrfToken) {
+        if (init.headers instanceof Headers) {
+          init.headers.set('X-XSRF-TOKEN', newCsrfToken);
+        } else if (init.headers) {
+          init.headers['X-XSRF-TOKEN'] = newCsrfToken;
+        } else {
+          init.headers = { 'X-XSRF-TOKEN': newCsrfToken };
+        }
+        
+        // Silently retry the request with the new token
+        response = await originalFetch(...args);
+      }
+    }
+  }
+
+  // =========================================================================
+  // --- EXISTING: JWT REFRESH RETRY (401 UNAUTHORIZED) ---
+  // =========================================================================
   if (response.status === 401) {
     
     const url = typeof args[0] === 'string' ? args[0] : args[0].url;
@@ -35,23 +66,24 @@ window.fetch = async (...args) => {
       return response;
     }
 
-    // --- RACE CONDITION FIX ---
-    // If we are ALREADY refreshing the token, put this request in the waiting line!
+    // If we are ALREADY refreshing the token, put this request in the waiting line
     if (isRefreshing) {
-      return new Promise((resolve, reject) => {
+      return new Promise(function(resolve, reject) {
         failedQueue.push({ resolve, reject });
       }).then(() => {
-        // Once the queue is processed (refresh is successful), retry THIS request
+        // Once the line moves, grab the latest CSRF token and try again
         if (args[1] && args[1].headers && !(args[1].headers instanceof Headers)) {
-          if (args[1].headers['X-XSRF-TOKEN']) args[1].headers['X-XSRF-TOKEN'] = getCookie('XSRF-TOKEN');
+          if (args[1].headers['X-XSRF-TOKEN']) {
+            args[1].headers['X-XSRF-TOKEN'] = getCookie('XSRF-TOKEN');
+          }
         }
         return originalFetch(...args);
       }).catch(err => {
-        return response; // Return the original 401 if the refresh failed entirely
+        return Promise.reject(err);
       });
     }
 
-    // We are the FIRST request to get a 401! Lock the door.
+    // Lock the door. We are the first one to get a 401, so we do the refreshing.
     isRefreshing = true;
 
     try {
@@ -90,13 +122,13 @@ window.fetch = async (...args) => {
         window.location.href = '/';
         return response;
       }
-    } catch (error) {
+    } catch (err) {
       isRefreshing = false;
-      processQueue(error);
-      return response;
+      processQueue(err);
+      return Promise.reject(err);
     }
   }
 
-  // If it wasn't a 401, just return the response normally
+  // Return the successful response (or the failed one if it wasn't 401 or 403)
   return response;
 };
