@@ -48,6 +48,9 @@ const BacklogView = () => {
   const myRecord = members.find(m => m.member.id === currentUserId);
   const currentUserRole = myRecord ? myRecord.projectRole : 'VIEWER';
 
+  // --- NEW: Security check to see if a Developer is editing ---
+  const isDeveloperEditing = currentUserRole === 'DEVELOPER' && editingIssueId !== null;
+
   const getCookie = (name) => {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
@@ -156,15 +159,18 @@ const BacklogView = () => {
     e.preventDefault();
     if (!formData.title.trim()) { setFormErrors({title: "Title is required."}); return; }
     if (!formData.typeId) { setFormErrors({typeId: "Issue Type is required."}); return; }
-    if (!formData.priorityId) { setFormErrors({priorityId: "Priority is required."}); return; }
+    
+    // Developer bypasses priority requirement because they send null
+    if (!isDeveloperEditing && !formData.priorityId) { setFormErrors({priorityId: "Priority is required."}); return; }
 
     const payload = {
       title: formData.title,
       description: formData.description || null,
       typeId: formData.typeId,
-      priorityId: formData.priorityId,
+      // --- NEW: Force to null if developer is editing ---
+      priorityId: isDeveloperEditing ? null : formData.priorityId,
       storyPoints: formData.storyPoints ? parseInt(formData.storyPoints) : null,
-      assignedTo: formData.assignedTo || null,
+      assignedTo: isDeveloperEditing ? null : (formData.assignedTo || null),
       componentIds: formData.componentIds
     };
 
@@ -220,7 +226,11 @@ const BacklogView = () => {
       const response = await fetch(`/api/projects/${projectId}/configurations/priorities`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('sprintSightToken')}`, 'X-XSRF-TOKEN': getCookie('XSRF-TOKEN'), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newPriorityName, isDefault: false })
+        body: JSON.stringify({ 
+          name: newPriorityName, 
+          isDefault: false,
+          orderIndex: priorities.length // <-- ADDED THIS (Required by backend)
+        })
       });
       if (response.ok) {
         const newPriority = (await response.json()).data || await response.json();
@@ -240,7 +250,12 @@ const BacklogView = () => {
       const response = await fetch(`/api/projects/${projectId}/configurations/statuses`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('sprintSightToken')}`, 'X-XSRF-TOKEN': getCookie('XSRF-TOKEN'), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newStatusName, isDefault: false })
+        body: JSON.stringify({ 
+          name: newStatusName, 
+          isDefault: false,
+          orderIndex: statuses.length, // <-- ADDED THIS (Required by backend)
+          isCompleted: false           // <-- ADDED THIS (Required by backend)
+        })
       });
       if (response.ok) {
         const newStatus = (await response.json()).data || await response.json();
@@ -252,7 +267,6 @@ const BacklogView = () => {
     } catch (error) { console.error(error); } finally { setIsCreatingStatus(false); }
   };
 
-  // --- FILTER OUT COMPLETED ISSUES ---
   const activeBacklogIssues = issues.filter(issue => !issue.status?.isCompleted && issue.status?.name?.toLowerCase() !== 'done');
 
   return (
@@ -321,7 +335,9 @@ const BacklogView = () => {
         )}
       </div>
 
-      {/* MODALS REMAIN THE SAME (Omitted for brevity, paste your exact modals here) */}
+      {/* ======================================================== */}
+      {/* MODAL 1: VIEW DETAILS & COMMENTS                         */}
+      {/* ======================================================== */}
       {viewingIssue && createPortal(
         <div className="bv-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setViewingIssue(null); }}>
           <div className="bv-view-modal">
@@ -371,6 +387,9 @@ const BacklogView = () => {
         document.body
       )}
 
+      {/* ======================================================== */}
+      {/* MODAL 2: EDIT/CREATE FORM                                  */}
+      {/* ======================================================== */}
       {isModalOpen && createPortal(
         <div className="bv-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setIsModalOpen(false); }}>
           <div className="bv-modal-content">
@@ -398,7 +417,7 @@ const BacklogView = () => {
                         currentValue={formData.typeId}
                         options={[
                           ...types.map(t => ({ value: t.id, label: t.name })),
-                          { value: 'CREATE_NEW_TYPE', label: '+ Create New Type...' } 
+                          { value: 'CREATE_NEW_TYPE', label: '✨ + Create New Type...' } 
                         ]}
                         onChange={(val) => {
                           if (val === 'CREATE_NEW_TYPE') setIsCreateTypeModalOpen(true);
@@ -410,17 +429,24 @@ const BacklogView = () => {
 
                     <div className="bv-form-group">
                       <label>Priority</label>
-                      <CustomDropdown 
-                        currentValue={formData.priorityId}
-                        options={[
-                          ...priorities.map(p => ({ value: p.id, label: p.name })),
-                          { value: 'CREATE_NEW_PRIORITY', label: '+ Create New Priority...' } 
-                        ]}
-                        onChange={(val) => {
-                          if (val === 'CREATE_NEW_PRIORITY') setIsCreatePriorityModalOpen(true);
-                          else setFormData({...formData, priorityId: val});
-                        }}
-                      />
+                      {/* --- NEW: Read-only block if Developer is editing --- */}
+                      {isDeveloperEditing ? (
+                        <div className="bv-modal-input" style={{ opacity: 0.6, cursor: 'not-allowed', backgroundColor: 'var(--bg-hover)', display: 'flex', alignItems: 'center' }}>
+                          {priorities.find(p => p.id === formData.priorityId)?.name || 'Unchanged (Read-Only)'}
+                        </div>
+                      ) : (
+                        <CustomDropdown 
+                          currentValue={formData.priorityId}
+                          options={[
+                            ...priorities.map(p => ({ value: p.id, label: p.name })),
+                            { value: 'CREATE_NEW_PRIORITY', label: '✨ + Create New Priority...' } 
+                          ]}
+                          onChange={(val) => {
+                            if (val === 'CREATE_NEW_PRIORITY') setIsCreatePriorityModalOpen(true);
+                            else setFormData({...formData, priorityId: val});
+                          }}
+                        />
+                      )}
                       {formErrors.priorityId && <span className="bv-form-error">{formErrors.priorityId}</span>}
                     </div>
                   </div>
@@ -432,7 +458,7 @@ const BacklogView = () => {
                         currentValue={formData.statusId}
                         options={[
                           ...statuses.map(s => ({ value: s.id, label: s.name })),
-                          { value: 'CREATE_NEW_STATUS', label: '+ Create New Status...' } 
+                          { value: 'CREATE_NEW_STATUS', label: '✨ + Create New Status...' } 
                         ]}
                         onChange={(val) => {
                           if (val === 'CREATE_NEW_STATUS') setIsCreateStatusModalOpen(true);
@@ -459,17 +485,26 @@ const BacklogView = () => {
 
                   <div className="bv-form-group">
                     <label>Assign To</label>
-                    <CustomDropdown 
-                      currentValue={formData.assignedTo}
-                      options={[
-                        { value: '', label: 'Unassigned' },
-                        ...members.map(m => ({ 
-                          value: m.member.id, 
-                          label: `${m.member.fullName || m.member.username} (@${m.member.username})` 
-                        }))
-                      ]}
-                      onChange={(val) => setFormData({...formData, assignedTo: val})}
-                    />
+                    {/* --- NEW: Read-only block if Developer is editing --- */}
+                    {isDeveloperEditing ? (
+                      <div className="bv-modal-input" style={{ opacity: 0.6, cursor: 'not-allowed', backgroundColor: 'var(--bg-hover)', display: 'flex', alignItems: 'center' }}>
+                        {members.find(m => m.member.id === formData.assignedTo) 
+                          ? `@${members.find(m => m.member.id === formData.assignedTo).member.username}`
+                          : 'Unassigned (Read-Only)'}
+                      </div>
+                    ) : (
+                      <CustomDropdown 
+                        currentValue={formData.assignedTo}
+                        options={[
+                          { value: '', label: 'Unassigned' },
+                          ...members.map(m => ({ 
+                            value: m.member.id, 
+                            label: `${m.member.fullName || m.member.username} (@${m.member.username})` 
+                          }))
+                        ]}
+                        onChange={(val) => setFormData({...formData, assignedTo: val})}
+                      />
+                    )}
                   </div>
                 </div>
                 </div>
@@ -484,6 +519,9 @@ const BacklogView = () => {
         document.body 
       )}
 
+      {/* ======================================================== */}
+      {/* MODAL 3: CREATE TYPE MINI-MODAL                            */}
+      {/* ======================================================== */}
       {isCreateTypeModalOpen && createPortal(
         <div className="bv-modal-overlay bv-modal-overlay-top" onClick={(e) => { if (e.target === e.currentTarget) setIsCreateTypeModalOpen(false); }}>
           <div className="bv-modal-content bv-modal-sm">
@@ -503,6 +541,9 @@ const BacklogView = () => {
         document.body
       )}
 
+      {/* ======================================================== */}
+      {/* MODAL 4: CREATE PRIORITY MINI-MODAL                        */}
+      {/* ======================================================== */}
       {isCreatePriorityModalOpen && createPortal(
         <div className="bv-modal-overlay bv-modal-overlay-top" onClick={(e) => { if (e.target === e.currentTarget) setIsCreatePriorityModalOpen(false); }}>
           <div className="bv-modal-content bv-modal-sm">
@@ -522,6 +563,9 @@ const BacklogView = () => {
         document.body
       )}
 
+      {/* ======================================================== */}
+      {/* MODAL 5: CREATE STATUS MINI-MODAL                          */}
+      {/* ======================================================== */}
       {isCreateStatusModalOpen && createPortal(
         <div className="bv-modal-overlay bv-modal-overlay-top" onClick={(e) => { if (e.target === e.currentTarget) setIsCreateStatusModalOpen(false); }}>
           <div className="bv-modal-content bv-modal-sm">
